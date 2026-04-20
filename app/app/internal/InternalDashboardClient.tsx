@@ -1,7 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  ArrowUp, ArrowDown, ChevronsUpDown,
+  TrendingUp, TrendingDown,
+  ChevronLeft, ChevronRight,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import BlurText from '@/components/ui/BlurText'
 import CountUp from '@/components/ui/CountUp'
@@ -35,15 +40,31 @@ function fmtMonth(ym: string) {
 }
 
 function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
-  if (!active) return <span className="ml-1 text-gray-300 opacity-0 group-hover/th:opacity-100 transition-opacity">↕</span>
-  return <span className="ml-1 text-coral">{dir === 'asc' ? '↑' : '↓'}</span>
+  if (!active) return <ChevronsUpDown className="inline-block ml-1 w-3 h-3 text-gray-300 opacity-0 group-hover/th:opacity-100 transition-opacity" />
+  return active && dir === 'asc'
+    ? <ArrowUp className="inline-block ml-1 w-3 h-3 text-coral" />
+    : <ArrowDown className="inline-block ml-1 w-3 h-3 text-coral" />
 }
+
+const PAGE_SIZE = 20
 
 export function InternalDashboardClient({ rows, totals }: Props) {
   const router = useRouter()
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('total_revenue')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [page, setPage] = useState(1)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleSearch = useCallback((value: string) => {
+    setSearch(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(value)
+      setPage(1)
+    }, 200)
+  }, [])
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -52,10 +73,11 @@ export function InternalDashboardClient({ rows, totals }: Props) {
       setSortKey(key)
       setSortDir(key === 'display_name' || key === 'category' ? 'asc' : 'desc')
     }
+    setPage(1)
   }
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase()
+    const q = debouncedSearch.toLowerCase()
     const base = rows.filter(r =>
       r.display_name.toLowerCase().includes(q) ||
       r.category.toLowerCase().includes(q)
@@ -69,11 +91,14 @@ export function InternalDashboardClient({ rows, totals }: Props) {
       else cmp = (av as number) - (bv as number)
       return sortDir === 'asc' ? cmp : -cmp
     })
-  }, [rows, search, sortKey, sortDir])
+  }, [rows, debouncedSearch, sortKey, sortDir])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   const activeCount = rows.filter(r => r.is_currently_active).length
   const topPartners = [...rows]
-    .filter(r => r.is_currently_active)
     .sort((a, b) => b.total_revenue - a.total_revenue)
     .slice(0, 4)
 
@@ -109,17 +134,30 @@ export function InternalDashboardClient({ rows, totals }: Props) {
       <div className="max-w-screen-xl mx-auto px-6">
 
         {/* ── Page header ──────────────────────────────────── */}
-        <div className="pt-12 pb-10">
-          <BlurText
-            text="Partner Analytics"
-            className="text-3xl font-display font-semibold text-ink-900 tracking-display"
-            delay={60}
-            animateBy="words"
-          />
-          <FadeIn delay={0.3} y={12}>
-            <p className="text-sm text-ink-400 mt-2">
-              <span className="text-positive font-semibold">{activeCount}</span> of {rows.length} partners currently active
-            </p>
+        <div className="pt-12 pb-10 flex items-start justify-between">
+          <div>
+            <BlurText
+              text="Partner Analytics"
+              className="text-3xl font-display font-semibold text-ink-900 tracking-display"
+              delay={60}
+              animateBy="words"
+            />
+            <FadeIn delay={0.3} y={12}>
+              <p className="text-sm text-ink-400 mt-2">
+                <span className="text-positive font-semibold">{activeCount}</span> of {rows.length} partners currently active
+              </p>
+            </FadeIn>
+          </div>
+          <FadeIn delay={0.4} y={8}>
+            <button
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' })
+                window.location.href = '/internal-login'
+              }}
+              className="mt-12 text-xs font-medium text-ink-300 hover:text-negative transition-colors duration-200"
+            >
+              Sign out
+            </button>
           </FadeIn>
         </div>
 
@@ -183,12 +221,13 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                         </div>
                         <div>
                           <p className="text-[10px] text-ink-300 mb-0.5">Commission</p>
-                          <p className="text-xs font-semibold text-positive font-tabular">{fmt(row.total_revenue)}</p>
+                          <p className={`text-xs font-semibold font-tabular ${row.total_revenue > 0 ? 'text-coral' : 'text-ink-300'}`}>{fmt(row.total_revenue)}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-ink-300 mb-0.5">Trend</p>
-                          <p className={`text-xs font-semibold ${isUp ? 'text-positive' : row.revenue_trend === 'down' ? 'text-negative' : 'text-ink-300'}`}>
-                            {isUp ? '↑ Up' : row.revenue_trend === 'down' ? '↓ Down' : '→ Flat'}
+                          <p className="text-[10px] text-ink-300 mb-0.5">Status</p>
+                          <p className={`text-xs font-semibold ${row.is_currently_active ? 'text-positive' : 'text-ink-300'}`}>
+                            <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 ${row.is_currently_active ? 'bg-positive' : 'bg-gray-300'}`} />
+                            {row.is_currently_active ? 'Active' : 'Inactive'}
                           </p>
                         </div>
                       </div>
@@ -218,7 +257,7 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                   type="text"
                   placeholder="Search…"
                   value={search}
-                  onChange={e => setSearch(e.target.value)}
+                  onChange={e => handleSearch(e.target.value)}
                   aria-label="Search partners"
                   className="w-52 text-sm pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-sand-50
                     outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/30
@@ -260,13 +299,13 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-20 text-center text-sm text-ink-300">
-                      {search ? `No partners match "${search}"` : 'No partner data available.'}
+                      {debouncedSearch ? `No partners match "${debouncedSearch}"` : 'No partner data available.'}
                     </td>
                   </tr>
                 ) : (
-                  filtered.map(row => {
+                  paginated.map(row => {
                     const slug = row.partner_name.toLowerCase().replace(/\s+/g, '-')
-                    const trendIcon = row.revenue_trend === 'up' ? '↑' : row.revenue_trend === 'down' ? '↓' : null
+                    const TrendIcon = row.revenue_trend === 'up' ? TrendingUp : row.revenue_trend === 'down' ? TrendingDown : null
                     const trendCls  = row.revenue_trend === 'up' ? 'text-positive' : row.revenue_trend === 'down' ? 'text-negative' : ''
                     return (
                       <tr
@@ -293,8 +332,8 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                         <td className="px-4 py-3.5 text-ink-400 text-xs">{row.category}</td>
                         <td className="px-4 py-3.5 text-right font-tabular text-ink-800">{fmt(row.total_spend_gbp)}</td>
                         <td className="px-4 py-3.5 text-right font-tabular">
-                          <span className="text-coral font-medium">{fmt(row.total_revenue)}</span>
-                          {trendIcon && <span className={`ml-1 text-xs ${trendCls}`}>{trendIcon}</span>}
+                          <span className={`font-medium ${row.total_revenue > 0 ? 'text-coral' : 'text-ink-300'}`}>{fmt(row.total_revenue)}</span>
+                          {TrendIcon && <TrendIcon className={`inline-block ml-1 w-3 h-3 ${trendCls}`} />}
                         </td>
                         <td className="px-4 py-3.5 text-right font-tabular text-ink-400">{row.total_transactions.toLocaleString()}</td>
                         <td className="px-4 py-3.5 text-right font-tabular text-ink-400">{row.unique_users.toLocaleString()}</td>
@@ -313,8 +352,49 @@ export function InternalDashboardClient({ rows, totals }: Props) {
             </table>
 
             {filtered.length > 0 && (
-              <div className="px-6 py-3 border-t border-gray-100 text-xs text-ink-300">
-                Showing {filtered.length} of {rows.length} partners
+              <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-between gap-4">
+                <p className="text-xs text-ink-300">
+                  {filtered.length < rows.length
+                    ? `${filtered.length} of ${rows.length} partners`
+                    : `${rows.length} partners`}
+                  {totalPages > 1 && ` · page ${safePage} of ${totalPages}`}
+                </p>
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={safePage === 1}
+                      aria-label="Previous page"
+                      className="p-1.5 rounded-lg text-ink-400 hover:text-ink-700 hover:bg-sand-100
+                        disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                      <button
+                        key={n}
+                        onClick={() => setPage(n)}
+                        aria-label={`Page ${n}`}
+                        aria-current={n === safePage ? 'page' : undefined}
+                        className={`w-7 h-7 rounded-lg text-xs font-medium transition-colors
+                          ${n === safePage
+                            ? 'bg-coral text-white'
+                            : 'text-ink-400 hover:text-ink-700 hover:bg-sand-100'}`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={safePage === totalPages}
+                      aria-label="Next page"
+                      className="p-1.5 rounded-lg text-ink-400 hover:text-ink-700 hover:bg-sand-100
+                        disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

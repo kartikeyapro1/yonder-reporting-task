@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, DM_Serif_Display } from 'next/font/google'
+import { Toaster } from 'sonner'
 import './globals.css'
 
 const inter = Inter({
@@ -34,7 +35,19 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${dmSerif.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            classNames: {
+              toast: 'font-sans text-sm rounded-xl border border-gray-200 shadow-float',
+              success: 'text-positive',
+              error: 'text-negative',
+            },
+          }}
+        />
+      </body>
     </html>
   )
 }

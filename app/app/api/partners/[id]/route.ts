@@ -4,6 +4,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { requireStaffAuth } from '@/lib/auth'
 import { getPartnerReportSummary } from '@/lib/reporting/partner-report-summary'
 import { getPartnerBySlug } from '@/lib/config/partner-commercials'
 
@@ -12,6 +13,9 @@ interface Params {
 }
 
 export async function GET(_req: Request, { params }: Params) {
+  const auth = await requireStaffAuth()
+  if (auth instanceof NextResponse) return auth
+
   const { id } = await params
 
   const config = getPartnerBySlug(id)

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import { YonderLogo } from '@/components/brand/YonderLogo'
 
 interface HeaderProps {
@@ -43,9 +44,9 @@ export function Header({ section, partnerName, partnerSlug }: HeaderProps) {
           {section === 'partner' && partnerSlug && (
             <Link
               href={`/report/${partnerSlug}`}
-              className="text-sm font-medium text-gray-500 hover:text-coral transition-colors duration-300"
+              className="text-sm font-medium text-gray-500 hover:text-coral transition-colors duration-300 flex items-center gap-1"
             >
-              Full report →
+              Full report <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           )}
           {section === 'report' && (

@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Download, Link2, Check, ArrowRight, ExternalLink } from 'lucide-react'
+import { toast } from 'sonner'
 import { KpiCard } from '@/components/ui/KpiCard'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -48,6 +50,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
       const { url } = await res.json()
       await navigator.clipboard.writeText(url)
       setLinkState('copied')
+      toast.success('Magic link copied to clipboard')
       setTimeout(() => setLinkState('idle'), 2500)
     } catch {
       setLinkState('idle')
@@ -81,9 +84,9 @@ export function InternalPartnerDetailClient({ summary }: Props) {
               href={`/api/partners/${slug}/export?format=html`}
               download
               className="text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200/80 bg-white hover:bg-sand-50
-                hover:border-coral/20 transition-all duration-300 text-ink-600"
+                hover:border-coral/20 transition-all duration-300 text-ink-600 flex items-center gap-1.5"
             >
-              ↓ Export
+              <Download className="w-3.5 h-3.5" /> Export
             </a>
             <button
               onClick={handleGenerateLink}
@@ -98,21 +101,23 @@ export function InternalPartnerDetailClient({ summary }: Props) {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
                 </svg>
               )}
-              {linkState === 'copied' ? '✓ Copied!' : '🔗 Magic link'}
+              {linkState === 'copied'
+                ? <><Check className="w-3.5 h-3.5" /> Copied!</>
+                : <><Link2 className="w-3.5 h-3.5" /> Magic link</>}
             </button>
             <Link
               href={`/partner/${token}`}
               className="text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200/80 bg-white hover:bg-sand-50
-                hover:border-coral/20 transition-all duration-300 text-ink-600"
+                hover:border-coral/20 transition-all duration-300 text-ink-600 flex items-center gap-1.5"
             >
-              Partner view →
+              Partner view <ExternalLink className="w-3.5 h-3.5" />
             </Link>
             <Link
               href={`/report/${token}`}
               className="text-sm font-medium px-4 py-2.5 rounded-xl bg-coral text-white
-                hover:bg-coral-dark hover:shadow-glow-coral transition-all duration-300"
+                hover:bg-coral-dark hover:shadow-glow-coral transition-all duration-300 flex items-center gap-1.5"
             >
-              View report →
+              View report <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
@@ -131,15 +136,15 @@ export function InternalPartnerDetailClient({ summary }: Props) {
         <StaggerItem>
           <KpiCard
             label="Points earned"
-            value={summary.total_points_earned.toLocaleString()}
+            value={(summary.total_points_earned ?? 0).toLocaleString()}
             sub="by Yonder cardholders"
           />
         </StaggerItem>
         <StaggerItem>
           <KpiCard
             label="Experience engagement"
-            value={`${(summary.experience_engagement_rate * 100).toFixed(0)}%`}
-            sub={`${summary.experience_matched_transactions} visits triggered reward`}
+            value={`${((summary.experience_engagement_rate ?? 0) * 100).toFixed(0)}%`}
+            sub={`${summary.experience_matched_transactions ?? 0} visits triggered reward`}
           />
         </StaggerItem>
         <StaggerItem>
@@ -152,7 +157,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
         <StaggerItem>
           <KpiCard
             label="Denied experiences"
-            value={summary.denied_experience_transactions.toLocaleString()}
+            value={(summary.denied_experience_transactions ?? 0).toLocaleString()}
             sub="card not linked"
           />
         </StaggerItem>

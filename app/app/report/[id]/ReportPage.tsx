@@ -3,6 +3,7 @@
 import { SpendTrendChart } from '@/components/charts/SpendTrendChart'
 import { NewVsExistingChart } from '@/components/charts/NewVsExistingChart'
 import { OnOffComparisonChart } from '@/components/charts/OnOffComparisonChart'
+import { Download } from 'lucide-react'
 import { YonderLogo } from '@/components/brand/YonderLogo'
 import { FadeIn, StaggerList, StaggerItem } from '@/components/motion'
 import type { PartnerSummaryMetrics, CommercialModel } from '@/lib/types'
@@ -95,9 +96,9 @@ export function ReportPage({ summary, commercials }: Props) {
             <a
               href={`/api/partners/${slug}/export?format=html`}
               download
-              className="inline-block text-xs font-medium px-3 py-2 rounded-lg border border-white/20 bg-white/10 hover:bg-coral hover:text-white hover:border-coral transition-all duration-200"
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-white/20 bg-white/10 hover:bg-coral hover:text-white hover:border-coral transition-all duration-200"
             >
-              ↓ Download report
+              <Download className="w-3 h-3" /> Download report
             </a>
           </div>
 
@@ -313,10 +314,10 @@ export function ReportPage({ summary, commercials }: Props) {
               )}
               <DataRow label="Total partnership investment" value={fmt(summary.total_revenue)} highlight large />
               <DataRow label="Effective rate" value={`${revenueMargin.toFixed(2)}% of total card spend`} />
-              {summary.total_points_earned > 0 && (
+              {(summary.total_points_earned ?? 0) > 0 && (
                 <DataRow
                   label={`Yonder points earned by members`}
-                  value={summary.total_points_earned.toLocaleString()}
+                  value={(summary.total_points_earned ?? 0).toLocaleString()}
                 />
               )}
             </div>
@@ -368,7 +369,7 @@ export function ReportPage({ summary, commercials }: Props) {
                         <td className="px-4 py-2.5 text-right text-ink-400 font-tabular">{m.settled_transactions}</td>
                         <td className="px-4 py-2.5 text-right font-tabular text-ink-900">{fmt(m.total_spend_gbp)}</td>
                         <td className="px-4 py-2.5 text-right font-tabular text-coral font-semibold">{fmt(m.total_revenue)}</td>
-                        <td className="px-4 py-2.5 text-right text-ink-400 font-tabular">{m.total_points_earned.toLocaleString()}</td>
+                        <td className="px-4 py-2.5 text-right text-ink-400 font-tabular">{(m.total_points_earned ?? 0).toLocaleString()}</td>
                         <td className="px-4 py-2.5 text-right text-ink-400 font-tabular">{m.new_transactions}</td>
                         <td className="px-5 py-2.5 text-right text-ink-400 font-tabular">{m.unique_users}</td>
                       </tr>

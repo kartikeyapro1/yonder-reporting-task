@@ -4,11 +4,15 @@
  */
 
 import { NextResponse } from 'next/server'
+import { requireStaffAuth } from '@/lib/auth'
 import { getAllPartnerSummaries } from '@/lib/reporting/partner-report-summary'
 import { getPartnerConfig } from '@/lib/config/partner-commercials'
 import type { InternalDashboardRow } from '@/lib/types'
 
 export async function GET() {
+  const auth = await requireStaffAuth()
+  if (auth instanceof NextResponse) return auth
+
   const summaries = getAllPartnerSummaries()
 
   const rows: InternalDashboardRow[] = summaries.map(s => {

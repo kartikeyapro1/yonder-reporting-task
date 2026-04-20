@@ -7,6 +7,6 @@ import { cookies } from 'next/headers'
 
 export async function POST() {
   const cookieStore = await cookies()
-  cookieStore.delete('yonder_staff_session')
+  cookieStore.delete('yonder_internal')
   return NextResponse.json({ ok: true })
 }

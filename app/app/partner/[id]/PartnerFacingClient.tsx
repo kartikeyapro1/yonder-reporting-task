@@ -240,9 +240,9 @@ export function PartnerFacingClient({ summary }: Props) {
           </StaggerList>
 
           {/* Secondary stats row */}
-          {(summary.total_points_earned > 0 || summary.experience_engagement_rate > 0) && (
+          {((summary.total_points_earned ?? 0) > 0 || (summary.experience_engagement_rate ?? 0) > 0) && (
             <StaggerList className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4 md:mt-5" staggerDelay={0.1}>
-              {summary.total_points_earned > 0 && (
+              {(summary.total_points_earned ?? 0) > 0 && (
                 <StaggerItem>
                   <FloatCard className="bg-sand-50 rounded-2xl border border-sand-200 p-5 flex items-center gap-4 cursor-default">
                     <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center shrink-0">
@@ -252,7 +252,7 @@ export function PartnerFacingClient({ summary }: Props) {
                     </div>
                     <div>
                       <p className="text-xl font-semibold text-ink-900 font-tabular tracking-tight leading-none mb-1">
-                        <CountUp to={summary.total_points_earned} from={0} duration={2.2} separator="," />
+                        <CountUp to={summary.total_points_earned ?? 0} from={0} duration={2.2} separator="," />
                       </p>
                       <p className="text-sm font-medium text-ink-600">Yonder points earned</p>
                       <p className="text-xs text-ink-300 mt-0.5">by customers visiting {summary.display_name}</p>
@@ -260,7 +260,7 @@ export function PartnerFacingClient({ summary }: Props) {
                   </FloatCard>
                 </StaggerItem>
               )}
-              {summary.experience_engagement_rate > 0 && (
+              {(summary.experience_engagement_rate ?? 0) > 0 && (
                 <StaggerItem>
                   <FloatCard className="bg-sand-50 rounded-2xl border border-sand-200 p-5 flex items-center gap-4 cursor-default" delay={0.08}>
                     <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center shrink-0">
@@ -271,7 +271,7 @@ export function PartnerFacingClient({ summary }: Props) {
                     </div>
                     <div>
                       <p className="text-xl font-semibold text-ink-900 font-tabular tracking-tight leading-none mb-1">
-                        <CountUp to={Math.round(summary.experience_engagement_rate * 100)} from={0} duration={2.2} />%
+                        <CountUp to={Math.round((summary.experience_engagement_rate ?? 0) * 100)} from={0} duration={2.2} />%
                       </p>
                       <p className="text-sm font-medium text-ink-600">Reward engagement rate</p>
                       <p className="text-xs text-ink-300 mt-0.5">{summary.experience_matched_transactions} visits triggered a Yonder reward</p>

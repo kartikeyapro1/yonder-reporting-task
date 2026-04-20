@@ -1,3 +1,5 @@
+import { TrendingUp, TrendingDown } from 'lucide-react'
+
 interface KpiCardProps {
   label: string
   value: string
@@ -12,10 +14,12 @@ export function KpiCard({ label, value, sub, trend }: KpiCardProps) {
       <div className="flex items-end justify-between gap-2">
         <p className="text-2xl font-semibold text-gray-900 font-tabular tracking-tight">{value}</p>
         {trend && trend !== 'flat' && (
-          <span className={`text-xs font-medium ${
+          <span className={`flex items-center ${
             trend === 'up' ? 'text-positive' : 'text-negative'
           }`}>
-            {trend === 'up' ? '↑' : '↓'}
+            {trend === 'up'
+              ? <TrendingUp className="w-3.5 h-3.5" strokeWidth={2.5} />
+              : <TrendingDown className="w-3.5 h-3.5" strokeWidth={2.5} />}
           </span>
         )}
       </div>

@@ -15,6 +15,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { requireStaffAuth } from '@/lib/auth'
 import { getPartnerReportSummary } from '@/lib/reporting/partner-report-summary'
 import { getPartnerBySlug, getPartnerByToken } from '@/lib/config/partner-commercials'
 import { generateReportHtml } from '@/lib/reporting/report-generator'
@@ -24,6 +25,9 @@ interface Params {
 }
 
 export async function GET(req: Request, { params }: Params) {
+  const auth = await requireStaffAuth()
+  if (auth instanceof NextResponse) return auth
+
   const { id } = await params
   const url = new URL(req.url)
   const format = (url.searchParams.get('format') ?? 'html') as 'html' | 'pdf' | 'email'
