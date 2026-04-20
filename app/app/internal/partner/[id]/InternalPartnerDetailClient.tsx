@@ -33,6 +33,26 @@ type ChartTab = 'spend' | 'commission' | 'on-off' | 'new-repeat'
 
 export function InternalPartnerDetailClient({ summary }: Props) {
   const [chartTab, setChartTab] = useState<ChartTab>('spend')
+  const [linkState, setLinkState] = useState<'idle' | 'loading' | 'copied'>('idle')
+
+  async function handleGenerateLink() {
+    setLinkState('loading')
+    try {
+      const res = await fetch('/api/auth/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partnerName: summary.partner_name }),
+        credentials: 'same-origin',
+      })
+      if (!res.ok) throw new Error('Failed')
+      const { url } = await res.json()
+      await navigator.clipboard.writeText(url)
+      setLinkState('copied')
+      setTimeout(() => setLinkState('idle'), 2500)
+    } catch {
+      setLinkState('idle')
+    }
+  }
 
   const token = PARTNER_CONFIGS.find(c => c.partner_name === summary.partner_name)?.partner_token ?? ''
   const hasOnOff = summary.on_months_count > 0 && summary.off_months_count > 0
@@ -65,6 +85,21 @@ export function InternalPartnerDetailClient({ summary }: Props) {
             >
               ↓ Export
             </a>
+            <button
+              onClick={handleGenerateLink}
+              disabled={linkState === 'loading'}
+              className="text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200/80 bg-white hover:bg-sand-50
+                hover:border-coral/20 transition-all duration-300 text-ink-600
+                disabled:opacity-50 disabled:cursor-wait flex items-center gap-1.5"
+            >
+              {linkState === 'loading' && (
+                <svg className="animate-spin h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
+                </svg>
+              )}
+              {linkState === 'copied' ? '✓ Copied!' : '🔗 Magic link'}
+            </button>
             <Link
               href={`/partner/${token}`}
               className="text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200/80 bg-white hover:bg-sand-50

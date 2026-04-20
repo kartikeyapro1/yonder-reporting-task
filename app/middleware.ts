@@ -1,30 +1,74 @@
 /**
  * middleware.ts
  *
- * Next.js middleware for route-level authentication.
+ * Route-level authentication for the Yonder reporting platform.
  *
- * Runs on every request matching the configured paths.
- * When REQUIRE_AUTH=true:
- * - /internal/* routes redirect to /login if no staff session
- * - /api/admin/* returns 401 if no staff session
- * - /partner/* routes are token-gated (token is in the URL)
+ * Guards:
+ * - /internal/*  — require yonder_internal cookie (set via /internal-login)
+ * - /partner/*   — require yonder_partner cookie matching the URL token
+ *                  (set when redeeming a magic link via /api/auth/access)
+ * - /report/*    — same partner cookie check as /partner/*
  *
- * When REQUIRE_AUTH is not set (default for development),
- * all routes are accessible without authentication.
+ * Internal staff (yonder_internal cookie) can bypass partner route guards
+ * so they can preview any partner page from the dashboard.
+ *
+ * No secrets are read in middleware — only cookie values are compared.
+ * Secret validation happens in the API route handlers.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { checkRouteAuth } from '@/lib/auth'
+
+const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'yonder2025'
+const COOKIE_INTERNAL = 'yonder_internal'
+const COOKIE_PARTNER  = 'yonder_partner'
 
 export function middleware(req: NextRequest) {
-  const authResponse = checkRouteAuth(req)
-  if (authResponse) return authResponse
+  const { pathname } = req.nextUrl
+
+  // ── Internal dashboard ──────────────────────────────────────────────
+  if (pathname.startsWith('/internal')) {
+    const key = req.cookies.get(COOKIE_INTERNAL)?.value
+    if (key !== INTERNAL_SECRET) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/internal-login'
+      url.searchParams.set('next', pathname)
+      return NextResponse.redirect(url)
+    }
+    return NextResponse.next()
+  }
+
+  // ── Partner-facing routes ──────────────────────────────────────────
+  if (pathname.startsWith('/partner/') || pathname.startsWith('/report/')) {
+    // Internal staff can preview any partner page
+    const internalKey = req.cookies.get(COOKIE_INTERNAL)?.value
+    if (internalKey === INTERNAL_SECRET) return NextResponse.next()
+
+    const tokenFromPath = pathname.split('/')[2]
+    if (!tokenFromPath) return NextResponse.next()
+
+    const partnerToken = req.cookies.get(COOKIE_PARTNER)?.value
+
+    if (!partnerToken) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/access/needed'
+      return NextResponse.redirect(url)
+    }
+
+    if (partnerToken !== tokenFromPath) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/access/denied'
+      return NextResponse.redirect(url)
+    }
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
   matcher: [
     '/internal/:path*',
-    '/api/admin/:path*',
+    '/partner/:path*',
+    '/report/:path*',
   ],
 }
+
