@@ -96,8 +96,8 @@ export function PartnerFacingClient({ summary }: Props) {
   useMotionValueEvent(insightsY, 'change', (v) => {
     const n = summary.insights.length
     if (n === 0) return
-    const idx = Math.min(n - 1, Math.floor(v * n + 0.01))
-    setActiveInsight(Math.max(0, idx))
+    const idx = Math.max(0, Math.min(n - 1, Math.floor(v * n)))
+    setActiveInsight(prev => (prev === idx ? prev : idx))
   })
 
   const sec0 = useInView(sec0Ref, { margin: '-40% 0px -40% 0px' })
@@ -110,7 +110,7 @@ export function PartnerFacingClient({ summary }: Props) {
   const sections = [sec0, sec1, sec2, sec3, sec4, sec5]
 
   return (
-    <main className="bg-white overflow-x-hidden">
+    <main className="bg-white" style={{ overflowX: 'clip' }}>
       {/* ── Scroll progress bar ──────────────────────────────── */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-coral to-coral-light origin-left z-50 no-print"
@@ -554,12 +554,12 @@ export function PartnerFacingClient({ summary }: Props) {
               <AnimatePresence mode="wait">
                 <motion.span
                   key={activeInsight}
-                  initial={{ opacity: 0, y: 80, scale: 0.9 }}
-                  animate={{ opacity: 0.055, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -60, scale: 1.05 }}
-                  transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, y: 60 }}
+                  animate={{ opacity: 0.06, y: 0 }}
+                  exit={{ opacity: 0, y: -40 }}
+                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                   aria-hidden
-                  className="absolute -top-[12vw] right-0 text-[32vw] md:text-[22vw] font-display font-bold text-ink-900 leading-none select-none pointer-events-none"
+                  className="absolute top-0 right-0 text-[clamp(6rem,18vw,14rem)] font-display font-bold text-ink-900 leading-none select-none pointer-events-none -translate-y-1/2"
                 >
                   {String(activeInsight + 1).padStart(2, '0')}
                 </motion.span>
