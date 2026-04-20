@@ -238,6 +238,49 @@ export function PartnerFacingClient({ summary }: Props) {
               </FloatCard>
             </StaggerItem>
           </StaggerList>
+
+          {/* Secondary stats row */}
+          {(summary.total_points_earned > 0 || summary.experience_engagement_rate > 0) && (
+            <StaggerList className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4 md:mt-5" staggerDelay={0.1}>
+              {summary.total_points_earned > 0 && (
+                <StaggerItem>
+                  <FloatCard className="bg-sand-50 rounded-2xl border border-sand-200 p-5 flex items-center gap-4 cursor-default">
+                    <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center shrink-0">
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M9 2L11.09 6.26L16 7L12.5 10.4L13.18 15L9 12.77L4.82 15L5.5 10.4L2 7L6.91 6.26L9 2Z" fill="#F04E37" opacity="0.8"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xl font-semibold text-ink-900 font-tabular tracking-tight leading-none mb-1">
+                        <CountUp to={summary.total_points_earned} from={0} duration={2.2} separator="," />
+                      </p>
+                      <p className="text-sm font-medium text-ink-600">Yonder points earned</p>
+                      <p className="text-xs text-ink-300 mt-0.5">by customers visiting {summary.display_name}</p>
+                    </div>
+                  </FloatCard>
+                </StaggerItem>
+              )}
+              {summary.experience_engagement_rate > 0 && (
+                <StaggerItem>
+                  <FloatCard className="bg-sand-50 rounded-2xl border border-sand-200 p-5 flex items-center gap-4 cursor-default" delay={0.08}>
+                    <div className="w-10 h-10 rounded-xl bg-coral-50 flex items-center justify-center shrink-0">
+                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <circle cx="9" cy="9" r="7" stroke="#F04E37" strokeWidth="1.5" opacity="0.8"/>
+                        <path d="M6 9l2 2 4-4" stroke="#F04E37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xl font-semibold text-ink-900 font-tabular tracking-tight leading-none mb-1">
+                        <CountUp to={Math.round(summary.experience_engagement_rate * 100)} from={0} duration={2.2} />%
+                      </p>
+                      <p className="text-sm font-medium text-ink-600">Reward engagement rate</p>
+                      <p className="text-xs text-ink-300 mt-0.5">{summary.experience_matched_transactions} visits triggered a Yonder reward</p>
+                    </div>
+                  </FloatCard>
+                </StaggerItem>
+              )}
+            </StaggerList>
+          )}
         </div>
       </section>
 

@@ -305,8 +305,20 @@ export function ReportPage({ summary, commercials }: Props) {
                   value={fmt(summary.enhanced_rate_spend_gbp)}
                 />
               )}
+              {summary.denied_experience_transactions > 0 && (
+                <DataRow
+                  label={`Card not linked — visits unable to redeem (${summary.denied_experience_transactions})`}
+                  value="—"
+                />
+              )}
               <DataRow label="Total partnership investment" value={fmt(summary.total_revenue)} highlight large />
               <DataRow label="Effective rate" value={`${revenueMargin.toFixed(2)}% of total card spend`} />
+              {summary.total_points_earned > 0 && (
+                <DataRow
+                  label={`Yonder points earned by members`}
+                  value={summary.total_points_earned.toLocaleString()}
+                />
+              )}
             </div>
           </section>
         </FadeIn>
@@ -326,6 +338,7 @@ export function ReportPage({ summary, commercials }: Props) {
                     <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Transactions</th>
                     <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Spend</th>
                     <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Commission</th>
+                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Points</th>
                     <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">New</th>
                     <th className="text-right px-5 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Customers</th>
                   </tr>
@@ -355,6 +368,7 @@ export function ReportPage({ summary, commercials }: Props) {
                         <td className="px-4 py-2.5 text-right text-ink-400 font-tabular">{m.settled_transactions}</td>
                         <td className="px-4 py-2.5 text-right font-tabular text-ink-900">{fmt(m.total_spend_gbp)}</td>
                         <td className="px-4 py-2.5 text-right font-tabular text-coral font-semibold">{fmt(m.total_revenue)}</td>
+                        <td className="px-4 py-2.5 text-right text-ink-400 font-tabular">{m.total_points_earned.toLocaleString()}</td>
                         <td className="px-4 py-2.5 text-right text-ink-400 font-tabular">{m.new_transactions}</td>
                         <td className="px-5 py-2.5 text-right text-ink-400 font-tabular">{m.unique_users}</td>
                       </tr>

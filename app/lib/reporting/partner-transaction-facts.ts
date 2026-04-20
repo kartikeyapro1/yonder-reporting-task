@@ -32,16 +32,22 @@ export const getPartnerTransactionFacts = cache(
   // Both checks are required to stay consistent with the SQL layer
   // (06_partner_transaction_facts.sql WHERE match_status IN ('match'))
   const boostByTxId = new Map<string, { boost_type: string; enhanced_redemption_rate: boolean }>()
+  // Also track ALL matched experience rows (including denied) for engagement/denial metrics
+  const expMatchedTxIds = new Set<string>()   // any experience record exists for this tx
+  const expDeniedTxIds = new Set<string>()    // experience was denied (required_link=True / match_denied)
   for (const exp of experiences) {
+    if (!exp.transaction_id || exp.clean_description !== partnerName) continue
+    expMatchedTxIds.add(exp.transaction_id)
+    if (exp.match_status === 'match_denied' || exp.status === 'not_redeemable') {
+      expDeniedTxIds.add(exp.transaction_id)
+    }
     if (
-      exp.transaction_id &&
-      exp.clean_description === partnerName &&
       exp.match_status === 'match' &&
       exp.status === 'redeemable'
     ) {
       boostByTxId.set(exp.transaction_id, {
         boost_type: exp.boost_type ?? '',
-        enhanced_redemption_rate: exp.enhanced_redemption_rate === 'true' || exp.enhanced_redemption_rate === '1',
+        enhanced_redemption_rate: exp.enhanced_redemption_rate === 'true' || exp.enhanced_redemption_rate === 'True' || exp.enhanced_redemption_rate === 'TRUE' || exp.enhanced_redemption_rate === '1',
       })
     }
   }
@@ -85,8 +91,11 @@ export const getPartnerTransactionFacts = cache(
       is_boost: isBoost,
       boost_type: boostEntry?.boost_type ?? null,
       enhanced_redemption_rate: boostEntry?.enhanced_redemption_rate ?? false,
+      is_experience_matched: expMatchedTxIds.has(tx.transaction_id),
+      is_denied_experience: expDeniedTxIds.has(tx.transaction_id),
       commercial_model: model?.type ?? 'cpa_new_repeat',
       revenue_contribution: revenue,
+      points_earned: tx.points_earned,
     } satisfies PartnerTransactionFact
   })
 

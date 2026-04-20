@@ -61,10 +61,25 @@ boost_flags AS (
     SELECT
         ev.transaction_id,
         ev.boost_type,
-        CASE WHEN ev.boost_type = 'time_based' THEN TRUE ELSE FALSE END AS is_boost
+        CASE WHEN ev.boost_type = 'time_based' THEN TRUE ELSE FALSE END AS is_boost,
+        ev.enhanced_redemption_rate
     FROM experience_visited ev
     WHERE ev.match_status IN ('match')
+      AND ev.status = 'redeemable'
       AND ev.boost_type IS NOT NULL
+),
+
+-- All experience records per transaction (for engagement + denial tracking)
+experience_engagement AS (
+    SELECT
+        ev.transaction_id,
+        TRUE                                                           AS is_experience_matched,
+        CASE
+          WHEN ev.match_status = 'match_denied'
+            OR ev.status = 'not_redeemable'
+          THEN TRUE ELSE FALSE
+        END                                                            AS is_denied_experience
+    FROM experience_visited ev
 ),
 
 -- Commercial model — pick most recent effective model for each transaction date
@@ -93,11 +108,15 @@ SELECT
     nr.ts,
     nr.year_month,
     nr.trans_amount_gbp,
+    ct.points_earned,
     nr.is_new_customer,
     oo.is_on_yonder,
-    COALESCE(bf.is_boost, FALSE)       AS is_boost,
+    COALESCE(bf.is_boost, FALSE)                        AS is_boost,
     bf.boost_type,
-    am.model_type                      AS commercial_model,
+    COALESCE(bf.enhanced_redemption_rate, FALSE)        AS enhanced_redemption_rate,
+    COALESCE(ee.is_experience_matched, FALSE)           AS is_experience_matched,
+    COALESCE(ee.is_denied_experience, FALSE)            AS is_denied_experience,
+    am.model_type                                       AS commercial_model,
     -- Revenue: only on on-Yonder transactions
     CASE
       WHEN oo.is_on_yonder = FALSE THEN 0
@@ -111,9 +130,11 @@ SELECT
       WHEN am.model_type = 'blended_commission' THEN
         nr.trans_amount_gbp * am.blended_rate
       ELSE 0
-    END                                AS revenue_contribution
+    END                                                 AS revenue_contribution
 FROM new_repeat nr
-JOIN on_off oo    ON nr.transaction_id = oo.transaction_id
-LEFT JOIN boost_flags bf ON nr.transaction_id = bf.transaction_id
-LEFT JOIN applicable_model am ON nr.transaction_id = am.transaction_id
+JOIN clean_transactions ct ON nr.transaction_id = ct.transaction_id
+JOIN on_off oo             ON nr.transaction_id = oo.transaction_id
+LEFT JOIN boost_flags bf        ON nr.transaction_id = bf.transaction_id
+LEFT JOIN experience_engagement ee ON nr.transaction_id = ee.transaction_id
+LEFT JOIN applicable_model am   ON nr.transaction_id = am.transaction_id
 ;

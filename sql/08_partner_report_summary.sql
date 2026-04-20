@@ -34,6 +34,11 @@ aggregated AS (
         SUM(ptf.trans_amount_gbp)  FILTER (WHERE ptf.is_boost)             AS boost_spend_gbp,
         SUM(ptf.revenue_contribution) FILTER (WHERE ptf.is_boost)          AS boost_revenue,
 
+        -- Experience engagement
+        COUNT(ptf.transaction_id) FILTER (WHERE ptf.is_experience_matched) AS experience_matched_transactions,
+        COUNT(ptf.transaction_id) FILTER (WHERE ptf.is_denied_experience)  AS denied_experience_transactions,
+        SUM(ptf.points_earned)                                             AS total_points_earned,
+
         -- On vs Off Yonder
         SUM(ptf.trans_amount_gbp) FILTER (WHERE ptf.is_on_yonder)          AS on_yonder_spend,
         SUM(ptf.trans_amount_gbp) FILTER (WHERE NOT ptf.is_on_yonder)      AS off_yonder_spend,
@@ -62,6 +67,10 @@ SELECT
     a.boost_transactions,
     a.boost_spend_gbp,
     a.boost_revenue,
+    a.experience_matched_transactions,
+    a.denied_experience_transactions,
+    ROUND(a.experience_matched_transactions::NUMERIC / NULLIF(a.total_transactions, 0), 4) AS experience_engagement_rate,
+    a.total_points_earned,
     a.on_yonder_spend,
     a.off_yonder_spend,
     -- Incremental spend = on-Yonder minus off-Yonder (raw delta)

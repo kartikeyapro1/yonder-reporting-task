@@ -62,6 +62,20 @@ function generateInsights(metrics: Omit<PartnerSummaryMetrics, 'insights' | 'mon
     )
   }
 
+  if (metrics.total_points_earned > 0) {
+    const avgPts = metrics.total_transactions > 0 ? Math.round(metrics.total_points_earned / metrics.total_transactions) : 0
+    insights.push(
+      `Yonder members earned ${metrics.total_points_earned.toLocaleString()} points across all visits (avg. ${avgPts.toLocaleString()} pts per transaction).`
+    )
+  }
+
+  if (metrics.experience_engagement_rate > 0) {
+    const pct = (metrics.experience_engagement_rate * 100).toFixed(0)
+    insights.push(
+      `${pct}% of visits (${metrics.experience_matched_transactions.toLocaleString()}) triggered a Yonder reward experience.${metrics.denied_experience_transactions > 0 ? ` ${metrics.denied_experience_transactions} visit${metrics.denied_experience_transactions > 1 ? 's were' : ' was'} denied due to the card not being linked to the Yonder app.` : ''}`
+    )
+  }
+
   if (avgSpend > 0) {
     insights.push(`Average transaction value: ${formatGbp(avgSpend)} across ${metrics.unique_users.toLocaleString()} unique customers (${metrics.total_transactions.toLocaleString()} total transactions).`)
   }
@@ -102,6 +116,8 @@ export const getPartnerReportSummary = cache(
   const repeatFacts = settled.filter(f => !f.is_new_customer)
   const boostFacts = settled.filter(f => f.is_boost)
   const enhancedRateFacts = settled.filter(f => f.enhanced_redemption_rate)
+  const experienceMatchedFacts = settled.filter(f => f.is_experience_matched)
+  const deniedFacts = settled.filter(f => f.is_denied_experience)
 
   const lastMonth = inScope.length > 0 ? inScope[inScope.length - 1].year_month : baselineYm
   const firstMonth = inScope.length > 0 ? inScope[0].year_month : lastMonth
@@ -129,6 +145,11 @@ export const getPartnerReportSummary = cache(
 
     enhanced_rate_transactions: enhancedRateFacts.length,
     enhanced_rate_spend_gbp: enhancedRateFacts.reduce((s, f) => s + f.trans_amount_gbp, 0),
+
+    experience_matched_transactions: experienceMatchedFacts.length,
+    denied_experience_transactions: deniedFacts.length,
+    experience_engagement_rate: settled.length > 0 ? experienceMatchedFacts.length / settled.length : 0,
+    total_points_earned: settled.reduce((s, f) => s + f.points_earned, 0),
 
     unique_users: new Set(settled.map(f => f.user_id)).size,
     new_users: new Set(newFacts.map(f => f.user_id)).size,

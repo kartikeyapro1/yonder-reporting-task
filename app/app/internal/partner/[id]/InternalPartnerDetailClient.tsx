@@ -84,11 +84,43 @@ export function InternalPartnerDetailClient({ summary }: Props) {
       </FadeIn>
 
       {/* KPI strip */}
-      <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <StaggerItem><KpiCard label="Member spend" value={fmt(summary.total_spend_gbp)} /></StaggerItem>
         <StaggerItem><KpiCard label="Commission" value={fmt(summary.total_revenue)} /></StaggerItem>
         <StaggerItem><KpiCard label="Visits" value={summary.total_transactions.toLocaleString()} /></StaggerItem>
         <StaggerItem><KpiCard label="Members" value={summary.unique_users.toLocaleString()} /></StaggerItem>
+      </StaggerList>
+
+      {/* Secondary KPI strip */}
+      <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <StaggerItem>
+          <KpiCard
+            label="Points earned"
+            value={summary.total_points_earned.toLocaleString()}
+            sub="by Yonder cardholders"
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <KpiCard
+            label="Experience engagement"
+            value={`${(summary.experience_engagement_rate * 100).toFixed(0)}%`}
+            sub={`${summary.experience_matched_transactions} visits triggered reward`}
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <KpiCard
+            label="New members"
+            value={summary.new_users.toLocaleString()}
+            sub={`${((summary.new_transactions / summary.total_transactions) * 100).toFixed(0)}% of visits`}
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <KpiCard
+            label="Denied experiences"
+            value={summary.denied_experience_transactions.toLocaleString()}
+            sub="card not linked"
+          />
+        </StaggerItem>
       </StaggerList>
 
       {/* Incremental spend callout */}

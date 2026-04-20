@@ -29,6 +29,11 @@ SELECT
     SUM(ptf.trans_amount_gbp) FILTER (WHERE ptf.is_boost)  AS boost_spend_gbp,
     SUM(ptf.revenue_contribution) FILTER (WHERE ptf.is_boost) AS boost_revenue,
 
+    -- Experience engagement
+    COUNT(ptf.transaction_id) FILTER (WHERE ptf.is_experience_matched)  AS experience_matched_transactions,
+    COUNT(ptf.transaction_id) FILTER (WHERE ptf.is_denied_experience)   AS denied_experience_transactions,
+    SUM(ptf.points_earned)                                              AS total_points_earned,
+
     -- Revenue
     SUM(ptf.revenue_contribution)                          AS total_revenue,
     SUM(ptf.revenue_contribution) FILTER (WHERE ptf.is_new_customer)    AS new_revenue,

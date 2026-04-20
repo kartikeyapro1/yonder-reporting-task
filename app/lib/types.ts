@@ -57,6 +57,7 @@ export interface CleanTransaction {
   type: string                   // contactless | online | chip_and_pin
   is_settled: boolean
   merchant_category: string      // e.g. eating_out | groceries | transport | general
+  points_earned: number          // Yonder points awarded for this transaction
 }
 
 export interface PartnerUserFirstSeen {
@@ -79,8 +80,11 @@ export interface PartnerTransactionFact {
   is_boost: boolean              // true if matched to experience_visited with boost_type=time_based AND status=redeemable
   boost_type: string | null
   enhanced_redemption_rate: boolean  // true if experience_visited.enhanced_redemption_rate was true for this tx
+  is_experience_matched: boolean  // true if any experience_visited record links to this transaction (redeemable or denied)
+  is_denied_experience: boolean   // true if matched experience was denied (required_link=True, match_denied)
   commercial_model: CommercialModelType
   revenue_contribution: number
+  points_earned: number           // Yonder points awarded for this transaction
 }
 
 // ─── Partner configuration types ────────────────────────────────────────────
@@ -148,6 +152,10 @@ export interface PartnerMonthlyMetrics {
   enhanced_rate_transactions: number   // transactions where enhanced_redemption_rate = true
   enhanced_rate_spend_gbp: number
 
+  experience_matched_transactions: number  // transactions with any experience_visited record
+  denied_experience_transactions: number   // transactions with a denied experience (required_link)
+  total_points_earned: number              // sum of points_earned across all settled transactions
+
   total_revenue: number
   new_revenue: number
   repeat_revenue: number
@@ -179,6 +187,11 @@ export interface PartnerSummaryMetrics {
 
   enhanced_rate_transactions: number   // transactions where enhanced_redemption_rate = true
   enhanced_rate_spend_gbp: number
+
+  experience_matched_transactions: number  // transactions with any experience_visited record
+  denied_experience_transactions: number   // transactions with a denied experience (required_link)
+  experience_engagement_rate: number       // experience_matched / total_transactions (0–1)
+  total_points_earned: number              // sum of points_earned across all settled transactions
 
   unique_users: number
   new_users: number
