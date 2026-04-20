@@ -31,17 +31,19 @@ function formatGbp(v: number) {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
-  const d = payload[0]
   return (
-    <div className="bg-white border border-surface-border rounded-xl shadow-card-hover px-3.5 py-2.5 text-sm">
-      <p className="font-semibold text-ink mb-1">{formatMonth(label)}</p>
+    <div className="bg-white/95 backdrop-blur-sm border border-surface-border rounded-xl shadow-float px-4 py-3 text-sm">
+      <p className="font-semibold text-ink text-xs mb-1.5">{formatMonth(label)}</p>
       {payload.map((p: any) => (
-        <p key={p.name} className="text-ink-secondary">
-          <span className="font-medium" style={{ color: p.color }}>{p.name}: </span>
-          {typeof p.value === 'number' && p.name.includes('£')
-            ? formatGbp(p.value)
-            : p.value?.toLocaleString()}
-        </p>
+        <div key={p.name} className="flex items-center gap-2 text-ink-secondary">
+          <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+          <span className="text-xs">{p.name}</span>
+          <span className="font-semibold text-ink text-xs ml-auto font-tabular">
+            {typeof p.value === 'number' && p.name.includes('£')
+              ? formatGbp(p.value)
+              : p.value?.toLocaleString()}
+          </span>
+        </div>
       ))}
     </div>
   )
@@ -71,7 +73,7 @@ export function SpendTrendChart({ data, metric = 'spend', showOnOffBands }: Spen
             <stop offset="100%" stopColor="#F04E37" stopOpacity={0.01} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#eaecf4" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#eaecf4" strokeOpacity={0.7} vertical={false} />
         <XAxis
           dataKey="month"
           tickFormatter={formatMonth}
@@ -104,10 +106,12 @@ export function SpendTrendChart({ data, metric = 'spend', showOnOffBands }: Spen
           type="monotone"
           dataKey={key}
           stroke="#F04E37"
-          strokeWidth={2}
+          strokeWidth={2.5}
           fill="url(#areaGrad)"
           dot={false}
-          activeDot={{ r: 4, fill: '#F04E37', stroke: '#fff', strokeWidth: 2 }}
+          activeDot={{ r: 5, fill: '#F04E37', stroke: '#fff', strokeWidth: 2.5 }}
+          animationDuration={1200}
+          animationEasing="ease-out"
         />
       </AreaChart>
     </ResponsiveContainer>

@@ -27,9 +27,11 @@ export function getPartnerTransactionFacts(partnerName: string): PartnerTransact
   const baseline = config ? new Date(config.baseline_date) : new Date('2000-01-01')
 
   // Build boost lookup: transaction_id → experience row (for this partner)
+  // Only include records where match_status === 'match'; match_denied rows must be excluded
+  // to stay consistent with the SQL layer (06_partner_transaction_facts.sql line: WHERE match_status IN ('match'))
   const boostByTxId = new Map<string, { boost_type: string }>()
   for (const exp of experiences) {
-    if (exp.transaction_id && exp.clean_description === partnerName) {
+    if (exp.transaction_id && exp.clean_description === partnerName && exp.match_status === 'match') {
       boostByTxId.set(exp.transaction_id, { boost_type: exp.boost_type ?? '' })
     }
   }

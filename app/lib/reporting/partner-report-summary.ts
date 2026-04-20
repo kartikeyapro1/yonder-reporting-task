@@ -36,35 +36,37 @@ function generateInsights(metrics: Omit<PartnerSummaryMetrics, 'insights' | 'mon
     ? metrics.total_revenue / metrics.unique_users
     : 0
 
-  if (metrics.incremental_spend > 0) {
+  // Incremental spend comparison (show both sides, not just the delta)
+  if (metrics.on_yonder_spend > 0 && metrics.off_yonder_spend > 0) {
+    const sign = metrics.incremental_spend >= 0 ? '+' : ''
     insights.push(
-      `During active months, spend was ${formatGbp(metrics.incremental_spend)} higher than during off-Yonder periods — demonstrating clear incremental uplift.`
+      `On-Yonder months: ${formatGbp(metrics.on_yonder_spend)} spend. Off-Yonder months: ${formatGbp(metrics.off_yonder_spend)}. Delta: ${sign}${formatGbp(metrics.incremental_spend)}.`
+    )
+  } else if (metrics.on_yonder_spend > 0) {
+    insights.push(
+      `All recorded spend (${formatGbp(metrics.on_yonder_spend)}) occurred during active Yonder months.`
     )
   }
 
-  if (newPct > 30) {
+  if (newPct > 0 && metrics.total_transactions > 0) {
     insights.push(
-      `${newPct.toFixed(0)}% of transactions were from new customers, suggesting strong customer acquisition performance.`
-    )
-  } else if (newPct > 0) {
-    insights.push(
-      `${(100 - newPct).toFixed(0)}% of transactions came from returning customers, reflecting a loyal, repeat-visiting user base.`
+      `${newPct.toFixed(0)}% of transactions (${metrics.new_transactions.toLocaleString()}) were first-time visits; ${(100 - newPct).toFixed(0)}% (${metrics.repeat_transactions.toLocaleString()}) from returning customers.`
     )
   }
 
   if (metrics.boost_transactions > 0) {
     const boostPct = (metrics.boost_transactions / metrics.total_transactions) * 100
     insights.push(
-      `${boostPct.toFixed(0)}% of transactions occurred during time-boost periods, generating ${formatGbp(metrics.boost_revenue)} in boost-attributed revenue.`
+      `${metrics.boost_transactions.toLocaleString()} transactions (${boostPct.toFixed(0)}%) matched a time-boost window, contributing ${formatGbp(metrics.boost_revenue)} of total revenue.`
     )
   }
 
   if (avgSpend > 0) {
-    insights.push(`Average transaction value was ${formatGbp(avgSpend)}, with ${metrics.unique_users.toLocaleString()} unique customers transacting in this period.`)
+    insights.push(`Average transaction value: ${formatGbp(avgSpend)} across ${metrics.unique_users.toLocaleString()} unique customers (${metrics.total_transactions.toLocaleString()} total transactions).`)
   }
 
   if (revenuePerUser > 0) {
-    insights.push(`Revenue per unique user was ${formatGbp(revenuePerUser)}.`)
+    insights.push(`Revenue per customer: ${formatGbp(revenuePerUser)}.`)
   }
 
   return insights

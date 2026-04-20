@@ -40,7 +40,7 @@ export function NewVsExistingChart({ data, metric = 'spend' }: NewVsExistingChar
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
-        <CartesianGrid strokeDasharray="3 3" stroke="#eaecf4" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#eaecf4" strokeOpacity={0.7} vertical={false} />
         <XAxis
           dataKey="month"
           tickFormatter={formatMonth}
@@ -62,16 +62,20 @@ export function NewVsExistingChart({ data, metric = 'spend' }: NewVsExistingChar
           contentStyle={{
             borderRadius: '12px',
             border: '1px solid #eaecf4',
-            fontSize: '13px',
+            fontSize: '12px',
+            backdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
           }}
+          itemStyle={{ color: '#4a5068', fontSize: '12px' }}
         />
         <Legend
-          wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
+          wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
           iconType="circle"
-          iconSize={8}
+          iconSize={7}
         />
-        <Bar dataKey="New" stackId="a" fill="#F04E37" radius={[0, 0, 0, 0]} />
-        <Bar dataKey="Repeat" stackId="a" fill="#9DAABF" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="New" stackId="a" fill="#F04E37" radius={[0, 0, 0, 0]} animationDuration={1000} animationEasing="ease-out" />
+        <Bar dataKey="Repeat" stackId="a" fill="#C5CBDA" radius={[6, 6, 0, 0]} animationDuration={1000} animationEasing="ease-out" />
       </BarChart>
     </ResponsiveContainer>
   )

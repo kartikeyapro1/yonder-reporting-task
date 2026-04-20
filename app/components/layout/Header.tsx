@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 
 interface HeaderProps {
   section?: 'internal' | 'partner' | 'report'
@@ -6,64 +9,71 @@ interface HeaderProps {
   partnerSlug?: string
 }
 
-/** Yonder wordmark as inline SVG — matches brand font weight */
-function YonderLogo({ dark = false }: { dark?: boolean }) {
+/** Yonder wordmark — matching the clean yonder.com style */
+function YonderLogo({ variant = 'light' }: { variant?: 'light' | 'dark' | 'coral' }) {
+  const textCls = variant === 'dark' ? 'text-white' : 'text-ink'
   return (
-    <div className="flex items-center gap-2.5">
-      {/* Coral Y mark */}
-      <div className="w-7 h-7 rounded-lg bg-coral flex items-center justify-center shrink-0 shadow-sm">
-        <span className="text-white text-sm font-black tracking-tighter leading-none">Y</span>
+    <div className="flex items-center gap-2">
+      <div className="w-7 h-7 rounded-lg bg-coral-gradient flex items-center justify-center shrink-0 shadow-sm">
+        <span className="text-white text-[13px] font-black leading-none">Y</span>
       </div>
-      <span className={`text-sm font-bold tracking-tight ${dark ? 'text-ink-inverse' : 'text-ink'}`}>
+      <span className={`text-[15px] font-bold tracking-tight ${textCls}`}>
         Yonder
       </span>
     </div>
   )
 }
 
-/**
- * Two visual modes:
- *   internal — dark navy bar, dense nav, "Internal" badge
- *   partner / report — white frosted bar, minimal nav, partner name
- */
 export function Header({ section, partnerName, partnerSlug }: HeaderProps) {
   const isInternal = section === 'internal'
 
   if (isInternal) {
     return (
-      <header className="sticky top-0 z-30 bg-navy-900 border-b border-navy-700">
-        <div className="max-w-screen-xl mx-auto px-6 h-12 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+      <motion.header
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="sticky top-0 z-40 bg-navy-900/95 backdrop-blur-xl border-b border-white/[0.06]"
+      >
+        <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-8">
             <Link href="/internal">
-              <YonderLogo dark />
+              <YonderLogo variant="dark" />
             </Link>
-            <nav className="flex items-center gap-1">
+            <nav className="hidden sm:flex items-center gap-1">
               <Link
                 href="/internal"
-                className="px-3 py-1 rounded-md text-xs font-medium text-navy-200 hover:text-white hover:bg-navy-700 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-[13px] font-medium text-white/70 hover:text-white hover:bg-white/[0.06] transition-all duration-200"
               >
                 Partners
               </Link>
             </nav>
           </div>
-          <span className="text-xs font-medium text-navy-400 bg-navy-800 border border-navy-600 px-2.5 py-0.5 rounded-full">
-            Internal
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-semibold text-white/30 uppercase tracking-[0.1em] bg-white/[0.05] border border-white/[0.08] px-3 py-1 rounded-full">
+              Internal
+            </span>
+          </div>
         </div>
-      </header>
+      </motion.header>
     )
   }
 
   return (
-    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-surface-border">
+    <motion.header
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-surface-border/60"
+    >
       <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/internal">
             <YonderLogo />
           </Link>
           {partnerName && (
-            <div className="flex items-center gap-2 text-sm text-ink-tertiary">
-              <span className="text-surface-border">/</span>
+            <div className="flex items-center gap-2.5 text-sm">
+              <span className="text-surface-border/80">/</span>
               <span className="text-ink font-medium">{partnerName}</span>
             </div>
           )}
@@ -73,19 +83,20 @@ export function Header({ section, partnerName, partnerSlug }: HeaderProps) {
           {section === 'partner' && partnerSlug && (
             <Link
               href={`/report/${partnerSlug}`}
-              className="text-xs font-medium text-coral hover:text-coral-dark transition-colors"
+              className="group text-[13px] font-medium text-ink-secondary hover:text-coral transition-colors duration-200 flex items-center gap-1"
             >
-              Full report →
+              Full report
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
             </Link>
           )}
           {section === 'report' && (
-            <span className="text-xs font-medium text-ink-tertiary border border-surface-border rounded-full px-2.5 py-0.5">
-              Partner Report
+            <span className="text-[11px] font-semibold text-ink-tertiary uppercase tracking-[0.08em] bg-surface-muted border border-surface-border rounded-full px-3 py-1">
+              Report
             </span>
           )}
         </div>
       </div>
-    </header>
+    </motion.header>
   )
 }
 

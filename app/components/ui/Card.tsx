@@ -6,20 +6,32 @@ interface CardProps {
   children: React.ReactNode
   className?: string
   hoverable?: boolean
+  glass?: boolean
+  dark?: boolean
   onClick?: () => void
 }
 
-export function Card({ children, className = '', hoverable, onClick }: CardProps) {
+export function Card({ children, className = '', hoverable, glass, dark, onClick }: CardProps) {
+  const base = dark
+    ? 'bg-surface-darkCard rounded-2xl border border-surface-darkBorder'
+    : glass
+    ? 'glass rounded-2xl'
+    : 'bg-white rounded-2xl shadow-card border border-surface-border'
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      whileHover={hoverable ? { y: -2, boxShadow: '0 4px 24px 0 rgb(0 0 0 / 0.1)' } : undefined}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={hoverable ? {
+        y: -2,
+        boxShadow: '0 0 0 1px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.08), 0 24px 64px rgba(0,0,0,0.06)',
+        transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
+      } : undefined}
       onClick={onClick}
       className={[
-        'bg-white rounded-2xl shadow-card border border-surface-border',
-        hoverable ? 'cursor-pointer transition-shadow' : '',
+        base,
+        hoverable ? 'cursor-pointer' : '',
         className,
       ].join(' ')}
     >

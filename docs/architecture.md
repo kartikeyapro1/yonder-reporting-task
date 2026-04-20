@@ -95,7 +95,9 @@ app/
 ## SQL Reporting Layer
 
 The `sql/` folder mirrors the TypeScript reporting layer as production-style
-Postgres/BigQuery-compatible SQL views. Each file corresponds to a stage:
+PostgreSQL-compatible SQL views. Each file corresponds to a stage:
+
+> Note: `DISTINCT ON`, `BOOL_OR`, `FILTER (WHERE ...)`, and `SERIAL` are PostgreSQL-specific. BigQuery equivalents would use `QUALIFY ROW_NUMBER()`, `COUNTIF`, and `IDENTITY` columns respectively.
 
 | File | Description |
 |------|-------------|

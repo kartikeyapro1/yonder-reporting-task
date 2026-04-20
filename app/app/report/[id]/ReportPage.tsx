@@ -16,10 +16,6 @@ function fmt(n: number) {
   return `£${n.toFixed(2)}`
 }
 
-function fmtRaw(n: number) {
-  return `£${n.toFixed(2)}`
-}
-
 function describeModel(model: CommercialModel): string {
   switch (model.type) {
     case 'cpa_new_repeat':
@@ -38,17 +34,20 @@ function describeModel(model: CommercialModel): string {
 function SectionHeader({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="mb-5">
-      <h2 className="text-base font-bold text-ink tracking-tight">{title}</h2>
-      {sub && <p className="text-xs text-ink-tertiary mt-0.5">{sub}</p>}
+      <div className="flex items-center gap-2.5">
+        <div className="w-1 h-5 rounded-full bg-coral-gradient print:bg-coral" />
+        <h2 className="text-base font-bold text-ink tracking-tight">{title}</h2>
+      </div>
+      {sub && <p className="text-[11px] text-ink-tertiary mt-1 ml-[18px]">{sub}</p>}
     </div>
   )
 }
 
 function DataRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-surface-border last:border-0">
+    <div className="flex items-center justify-between py-2.5 border-b border-surface-border/60 last:border-0">
       <span className="text-sm text-ink-secondary">{label}</span>
-      <span className={`text-sm font-semibold ${highlight ? 'text-accent-green' : 'text-ink'}`}>{value}</span>
+      <span className={`text-sm font-semibold font-tabular ${highlight ? 'text-accent-green' : 'text-ink'}`}>{value}</span>
     </div>
   )
 }
@@ -67,33 +66,31 @@ export function ReportPage({ summary, commercials }: Props) {
     ? (summary.total_revenue / summary.total_spend_gbp) * 100
     : 0
 
-  const activeMonths = summary.monthly_breakdown.filter(m => m.is_on_yonder).length
-  const totalMonths = summary.monthly_breakdown.length
-
   return (
-    <div className="min-h-screen bg-white">
-      {/* Report header bar */}
-      <div className="bg-navy-gradient text-white">
-        <div className="max-w-3xl mx-auto px-8 py-10">
+    <div className="min-h-screen bg-white print:bg-white">
+      {/* Report header */}
+      <div className="bg-navy-gradient text-white print:bg-navy-950 relative overflow-hidden">
+        <div className="absolute inset-0 bg-hero-mesh opacity-30 print:hidden" />
+        <div className="max-w-3xl mx-auto px-8 py-12 relative">
           <div className="flex items-start justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-md bg-coral flex items-center justify-center">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-coral-gradient flex items-center justify-center shadow-glow-coral/20">
                   <span className="text-white text-xs font-bold">Y</span>
                 </div>
-                <span className="text-white/70 text-sm font-medium">Yonder Partner Report</span>
+                <span className="text-white/50 text-[11px] font-semibold uppercase tracking-[0.12em]">Yonder Partner Report</span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight">{summary.display_name}</h1>
-              <p className="text-white/60 mt-1 text-sm">{summary.period_label}</p>
+              <p className="text-white/40 mt-1.5 text-sm">{summary.period_label}</p>
             </div>
-            <div className="text-right text-xs text-white/50">
+            <div className="text-right text-[11px] text-white/30">
               <p>Generated {generatedAt}</p>
               <p className="mt-0.5">Confidential</p>
             </div>
           </div>
 
-          {/* Top-level headline */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+          {/* Headline KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-10">
             {[
               { label: 'Total Spend', value: fmt(summary.total_spend_gbp) },
               { label: 'Revenue Earned', value: fmt(summary.total_revenue) },
@@ -102,13 +99,13 @@ export function ReportPage({ summary, commercials }: Props) {
             ].map((kpi, i) => (
               <motion.div
                 key={kpi.label}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.07 }}
-                className="bg-white/10 rounded-xl px-4 py-3 border border-white/10"
+                transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-white/[0.06] backdrop-blur-sm rounded-xl px-4 py-3.5 border border-white/[0.08]"
               >
-                <p className="text-white/50 text-xs uppercase tracking-wider mb-1">{kpi.label}</p>
-                <p className="text-white text-xl font-bold">{kpi.value}</p>
+                <p className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.1em] mb-1.5">{kpi.label}</p>
+                <p className="text-white text-xl font-bold font-tabular">{kpi.value}</p>
               </motion.div>
             ))}
           </div>
@@ -121,16 +118,16 @@ export function ReportPage({ summary, commercials }: Props) {
         {/* Executive summary */}
         <section>
           <SectionHeader title="Executive Summary" />
-          <div className="bg-surface-muted rounded-2xl border border-surface-border p-6 space-y-3">
+          <div className="bg-surface-muted/50 rounded-2xl border border-surface-border p-6 space-y-3">
             {summary.insights.map((insight, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: -4 }}
+                initial={{ opacity: 0, x: -6 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + i * 0.06 }}
+                transition={{ delay: 0.1 + i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 className="flex gap-3 text-sm text-ink-secondary"
               >
-                <span className="text-coral/80 mt-0.5 shrink-0">→</span>
+                <span className="text-coral mt-0.5 shrink-0">→</span>
                 <p>{insight}</p>
               </motion.div>
             ))}
@@ -182,15 +179,15 @@ export function ReportPage({ summary, commercials }: Props) {
           <SectionHeader title="New vs Returning Customers" />
           <div className="bg-white rounded-2xl border border-surface-border p-6">
             <div className="grid grid-cols-2 gap-6 mb-6">
-              <div>
-                <p className="text-xs text-ink-tertiary uppercase tracking-wide mb-2">New</p>
-                <p className="text-2xl font-bold text-ink">{summary.new_transactions}</p>
+              <div className="bg-coral-subtle rounded-xl p-4 border border-coral/[0.06]">
+                <p className="text-[10px] text-ink-tertiary uppercase tracking-[0.08em] mb-2">New</p>
+                <p className="text-2xl font-bold text-ink font-tabular">{summary.new_transactions}</p>
                 <p className="text-xs text-ink-secondary mt-0.5">transactions · {fmt(summary.new_spend_gbp)} spend</p>
                 <p className="text-xs text-accent-green font-semibold mt-0.5">{fmt(summary.new_revenue)} revenue</p>
               </div>
-              <div>
-                <p className="text-xs text-ink-tertiary uppercase tracking-wide mb-2">Repeat</p>
-                <p className="text-2xl font-bold text-ink">{summary.repeat_transactions}</p>
+              <div className="bg-surface-muted rounded-xl p-4 border border-surface-border">
+                <p className="text-[10px] text-ink-tertiary uppercase tracking-[0.08em] mb-2">Repeat</p>
+                <p className="text-2xl font-bold text-ink font-tabular">{summary.repeat_transactions}</p>
                 <p className="text-xs text-ink-secondary mt-0.5">transactions · {fmt(summary.repeat_spend_gbp)} spend</p>
                 <p className="text-xs text-accent-green font-semibold mt-0.5">{fmt(summary.repeat_revenue)} revenue</p>
               </div>
@@ -199,7 +196,7 @@ export function ReportPage({ summary, commercials }: Props) {
           </div>
         </section>
 
-        {/* On/Off Yonder (Scenario 1 — only rendered if relevant) */}
+        {/* On/Off Yonder */}
         {(summary.on_yonder_spend > 0 || summary.off_yonder_spend > 0) && (
           <section>
             <SectionHeader title="On vs Off Yonder — Incremental Spend" sub="Comparing spend during active Yonder periods vs inactive periods" />
@@ -213,8 +210,8 @@ export function ReportPage({ summary, commercials }: Props) {
               />
               <div className="mt-5">
                 <SpendTrendChart data={summary.monthly_breakdown} metric="spend" showOnOffBands />
-                <p className="text-xs text-ink-tertiary mt-2 text-center">
-                  Blue highlighted = months on Yonder
+                <p className="text-[11px] text-ink-tertiary mt-3 text-center">
+                  Green markers indicate active on-Yonder months
                 </p>
               </div>
             </div>
@@ -247,13 +244,13 @@ export function ReportPage({ summary, commercials }: Props) {
           <div className="bg-white rounded-2xl border border-surface-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-surface-muted">
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Month</th>
-                  <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">On Yonder</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Txns</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Spend</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Revenue</th>
-                  <th className="text-right px-5 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">New</th>
+                <tr className="bg-surface-muted/50">
+                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Month</th>
+                  <th className="text-center px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">On Yonder</th>
+                  <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Txns</th>
+                  <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Spend</th>
+                  <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Revenue</th>
+                  <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">New</th>
                 </tr>
               </thead>
               <tbody>
@@ -262,7 +259,7 @@ export function ReportPage({ summary, commercials }: Props) {
                   const [y, mo] = m.year_month.split('-')
                   const label = `${months[parseInt(mo) - 1]} ${y}`
                   return (
-                    <tr key={m.year_month} className="border-t border-surface-border">
+                    <tr key={m.year_month} className="border-t border-surface-border/60 hover:bg-surface-hover transition-colors duration-150 print:hover:bg-transparent">
                       <td className="px-5 py-2.5 font-medium text-ink">{label}</td>
                       <td className="px-4 py-2.5 text-center text-xs">
                         {m.is_on_yonder
@@ -270,10 +267,10 @@ export function ReportPage({ summary, commercials }: Props) {
                           : <span className="text-ink-tertiary">—</span>
                         }
                       </td>
-                      <td className="px-4 py-2.5 text-right text-ink-secondary">{m.settled_transactions}</td>
-                      <td className="px-4 py-2.5 text-right font-mono text-ink">{fmt(m.total_spend_gbp)}</td>
-                      <td className="px-4 py-2.5 text-right font-mono text-accent-green font-semibold">{fmt(m.total_revenue)}</td>
-                      <td className="px-5 py-2.5 text-right text-ink-secondary">{m.new_transactions}</td>
+                      <td className="px-4 py-2.5 text-right text-ink-secondary font-tabular">{m.settled_transactions}</td>
+                      <td className="px-4 py-2.5 text-right font-tabular text-ink font-medium">{fmt(m.total_spend_gbp)}</td>
+                      <td className="px-4 py-2.5 text-right font-tabular text-accent-green font-semibold">{fmt(m.total_revenue)}</td>
+                      <td className="px-5 py-2.5 text-right text-ink-secondary font-tabular">{m.new_transactions}</td>
                     </tr>
                   )
                 })}
@@ -284,8 +281,8 @@ export function ReportPage({ summary, commercials }: Props) {
 
         {/* Methodology footnotes */}
         <section className="border-t border-surface-border pt-8">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-tertiary mb-3">Methodology & Notes</h3>
-          <div className="space-y-1.5 text-xs text-ink-tertiary leading-relaxed">
+          <h3 className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-tertiary mb-3">Methodology & Notes</h3>
+          <div className="space-y-1.5 text-[11px] text-ink-tertiary leading-relaxed">
             <p>· Only settled transactions are included in revenue calculations. Declined and pending transactions are excluded.</p>
             <p>· "New customer" is defined as a user whose first settled transaction with this partner falls on or after the baseline date for this partner.</p>
             <p>· "On Yonder" periods are defined in the partner active period configuration and cover full calendar months.</p>
@@ -296,9 +293,9 @@ export function ReportPage({ summary, commercials }: Props) {
         </section>
 
         {/* Footer */}
-        <div className="flex items-center justify-between text-xs text-ink-tertiary pt-4">
+        <div className="flex items-center justify-between text-[11px] text-ink-tertiary pt-4 pb-2">
           <span>© Yonder · Confidential · {generatedAt}</span>
-          <span>Auto-generated report</span>
+          <span className="text-ink-tertiary/60">Auto-generated report</span>
         </div>
 
       </div>

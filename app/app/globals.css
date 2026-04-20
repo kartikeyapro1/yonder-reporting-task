@@ -5,12 +5,15 @@
 @layer base {
   :root {
     --font-inter: 'Inter', system-ui, sans-serif;
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
   }
 
   body {
@@ -22,9 +25,90 @@
     @apply border-surface-border;
   }
 
-  /* Tighter tracking on large headings */
   h1, h2, h3 {
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
+  }
+
+  h1 { letter-spacing: -0.035em; }
+
+  /* Selection colors */
+  ::selection {
+    background: rgba(240, 78, 55, 0.15);
+    color: inherit;
+  }
+}
+
+@layer components {
+  /* Glass morphism panels */
+  .glass {
+    @apply bg-surface-glass backdrop-blur-xl;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+
+  .glass-dark {
+    @apply bg-surface-darkGlass backdrop-blur-xl;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* Animated number containers */
+  .metric-value {
+    @apply font-bold font-tabular leading-none tracking-tight;
+  }
+
+  /* Premium card surfaces */
+  .premium-card {
+    @apply bg-white rounded-2xl shadow-card border border-surface-border;
+    @apply transition-all duration-300 ease-spring;
+  }
+
+  .premium-card:hover {
+    @apply shadow-card-hover;
+    transform: translateY(-1px);
+  }
+
+  /* Dark premium card */
+  .premium-card-dark {
+    @apply bg-surface-darkCard rounded-2xl border border-surface-darkBorder;
+    @apply transition-all duration-300 ease-spring;
+  }
+
+  .premium-card-dark:hover {
+    @apply bg-surface-darkHover;
+    transform: translateY(-1px);
+  }
+
+  /* Coral accent line */
+  .coral-accent {
+    @apply relative;
+  }
+  .coral-accent::before {
+    content: '';
+    @apply absolute -left-4 top-0 bottom-0 w-0.5 rounded-full;
+    background: linear-gradient(180deg, #F04E37, #FF6B52);
+  }
+
+  /* Subtle shine effect on cards */
+  .shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 40%,
+      rgba(255,255,255,0.05) 45%,
+      rgba(255,255,255,0.1) 50%,
+      rgba(255,255,255,0.05) 55%,
+      transparent 60%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .shine:hover::after {
+    transform: translateX(100%);
   }
 }
 
@@ -33,13 +117,12 @@
     text-wrap: balance;
   }
 
-  /* Tabular numbers for data tables */
   .font-tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum';
   }
 
-  /* Yonder coral underline decoration */
+  /* Coral underline decoration */
   .coral-underline {
     position: relative;
   }
@@ -50,19 +133,47 @@
     left: 0;
     width: 100%;
     height: 2px;
-    background: linear-gradient(90deg, #F04E37, #F97055);
+    background: linear-gradient(90deg, #F04E37, #FF6B52);
     border-radius: 1px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .coral-underline:hover::after {
+    transform: scaleX(1);
   }
 
   /* Smooth scroll region */
   .scroll-region {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.1) transparent;
   }
+
+  .scroll-region::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scroll-region::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-region::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.1);
+    border-radius: 3px;
+  }
+
+  /* Stagger animation delays */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-6 { animation-delay: 0.3s; }
 
   /* Print styles for report page */
   @media print {
     .no-print { display: none !important; }
     .print-break { page-break-before: always; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 }

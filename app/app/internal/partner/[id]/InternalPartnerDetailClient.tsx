@@ -40,31 +40,38 @@ export function InternalPartnerDetailClient({ summary }: Props) {
     <main className="max-w-screen-xl mx-auto px-6 py-10">
 
       {/* Breadcrumb + actions */}
-      <div className="flex items-center justify-between mb-6">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="flex items-center justify-between mb-8"
+      >
         <div>
-          <div className="flex items-center gap-2 text-xs text-ink-tertiary mb-1">
-            <Link href="/internal" className="hover:text-ink-secondary transition-colors">Partners</Link>
-            <span>/</span>
-            <span>{summary.display_name}</span>
+          <div className="flex items-center gap-2 text-xs text-ink-tertiary mb-2">
+            <Link href="/internal" className="hover:text-ink-secondary transition-colors duration-200">Partners</Link>
+            <span className="text-surface-border">/</span>
+            <span className="text-ink-secondary">{summary.display_name}</span>
           </div>
           <h1 className="text-2xl font-bold text-ink tracking-tight">{summary.display_name}</h1>
-          <p className="text-ink-secondary text-sm mt-0.5">{summary.period_label}</p>
+          <p className="text-ink-secondary text-sm mt-1">{summary.period_label}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           <Link
             href={`/partner/${slug}`}
-            className="text-sm font-medium px-4 py-2 rounded-xl border border-surface-border bg-white hover:bg-surface-muted transition-colors"
+            className="group text-[13px] font-medium px-4 py-2.5 rounded-xl border border-surface-border bg-white hover:bg-surface-hover hover:border-ink/10 transition-all duration-200 flex items-center gap-1.5"
           >
-            Partner view →
+            Partner view
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
           </Link>
           <Link
             href={`/report/${slug}`}
-            className="text-sm font-medium px-4 py-2 rounded-xl bg-coral text-white hover:bg-coral-dark transition-colors"
+            className="group text-[13px] font-medium px-4 py-2.5 rounded-xl bg-coral-gradient text-white hover:shadow-glow-coral transition-all duration-200 flex items-center gap-1.5"
           >
             View report
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -74,20 +81,20 @@ export function InternalPartnerDetailClient({ summary }: Props) {
         <KpiCard label="Unique Users" value={summary.unique_users.toLocaleString()} accent="amber" delay={0.15} />
       </div>
 
-      {/* Incremental spend callout (Scenario 1) */}
+      {/* Incremental spend callout */}
       {hasOnOff && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className={`rounded-2xl border px-6 py-5 mb-8 flex items-start gap-4 ${
+          transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className={`rounded-2xl border px-6 py-5 mb-8 flex items-start gap-4 transition-colors ${
             incrementalPositive
-              ? 'bg-accent-green/5 border-accent-green/20'
+              ? 'bg-accent-green/[0.03] border-accent-green/15'
               : 'bg-surface-muted border-surface-border'
           }`}
         >
           <div className={`mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-            incrementalPositive ? 'bg-accent-green/15 text-accent-green' : 'bg-surface-border text-ink-tertiary'
+            incrementalPositive ? 'bg-accent-green/10 text-accent-green' : 'bg-surface-border text-ink-tertiary'
           }`}>
             <svg width="18" height="18" fill="none" viewBox="0 0 18 18">
               <path d="M3 13L7 9L10 12L15 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -95,18 +102,18 @@ export function InternalPartnerDetailClient({ summary }: Props) {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-ink text-sm mb-0.5">Incremental Spend Analysis</p>
-            <div className="flex flex-wrap gap-8 mt-2 text-sm">
+            <div className="flex flex-wrap gap-8 mt-3 text-sm">
               <div>
-                <p className="text-xs text-ink-tertiary uppercase tracking-wide mb-0.5">On Yonder</p>
-                <p className="font-bold text-ink">{fmt(summary.on_yonder_spend)}</p>
+                <p className="text-[10px] text-ink-tertiary uppercase tracking-[0.08em] mb-1">On Yonder</p>
+                <p className="font-bold text-ink font-tabular">{fmt(summary.on_yonder_spend)}</p>
               </div>
               <div>
-                <p className="text-xs text-ink-tertiary uppercase tracking-wide mb-0.5">Off Yonder</p>
-                <p className="font-bold text-ink">{fmt(summary.off_yonder_spend)}</p>
+                <p className="text-[10px] text-ink-tertiary uppercase tracking-[0.08em] mb-1">Off Yonder</p>
+                <p className="font-bold text-ink font-tabular">{fmt(summary.off_yonder_spend)}</p>
               </div>
               <div>
-                <p className="text-xs text-ink-tertiary uppercase tracking-wide mb-0.5">Incremental Delta</p>
-                <p className={`font-bold ${incrementalPositive ? 'text-accent-green' : 'text-accent-red'}`}>
+                <p className="text-[10px] text-ink-tertiary uppercase tracking-[0.08em] mb-1">Incremental Delta</p>
+                <p className={`font-bold font-tabular ${incrementalPositive ? 'text-accent-green' : 'text-accent-red'}`}>
                   {incrementalPositive ? '+' : ''}{fmt(summary.incremental_spend)}
                 </p>
               </div>
@@ -121,12 +128,12 @@ export function InternalPartnerDetailClient({ summary }: Props) {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-semibold text-ink text-sm">Trends</h3>
-              <div className="flex gap-1 bg-surface-muted rounded-lg p-0.5">
+              <div className="flex gap-0.5 bg-surface-muted rounded-xl p-0.5">
                 {(['spend', 'revenue', 'on-off', 'new-repeat'] as ChartTab[]).map(tab => (
                   <button
                     key={tab}
                     onClick={() => setChartTab(tab)}
-                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
                       chartTab === tab
                         ? 'bg-white text-ink shadow-sm'
                         : 'text-ink-tertiary hover:text-ink-secondary'
@@ -150,29 +157,31 @@ export function InternalPartnerDetailClient({ summary }: Props) {
             <h3 className="font-semibold text-ink text-sm mb-4">New vs Existing</h3>
             <div className="space-y-3">
               <div>
-                <div className="flex justify-between text-xs text-ink-tertiary mb-1">
+                <div className="flex justify-between text-xs text-ink-tertiary mb-1.5">
                   <span>New customers</span>
-                  <span>{pct(summary.new_transactions, summary.total_transactions)}</span>
+                  <span className="font-tabular">{pct(summary.new_transactions, summary.total_transactions)}</span>
                 </div>
-                <div className="h-1.5 bg-surface-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-coral rounded-full transition-all"
-                    style={{ width: pct(summary.new_transactions, summary.total_transactions) }}
+                <div className="h-2 bg-surface-muted rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: pct(summary.new_transactions, summary.total_transactions) }}
+                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+                    className="h-full bg-coral-gradient rounded-full"
                   />
                 </div>
               </div>
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                <div className="bg-coral-subtle rounded-xl p-3">
-                  <p className="text-xs text-ink-tertiary mb-1">New</p>
-                  <p className="font-bold text-ink text-base">{summary.new_transactions}</p>
-                  <p className="text-xs text-ink-secondary">{fmt(summary.new_spend_gbp)} spend</p>
-                  <p className="text-xs text-accent-green font-medium mt-0.5">{fmt(summary.new_revenue)} rev</p>
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="bg-coral-subtle rounded-xl p-3.5 border border-coral/[0.06]">
+                  <p className="text-[10px] text-ink-tertiary uppercase tracking-wider mb-1">New</p>
+                  <p className="font-bold text-ink text-lg font-tabular">{summary.new_transactions}</p>
+                  <p className="text-xs text-ink-secondary mt-0.5">{fmt(summary.new_spend_gbp)} spend</p>
+                  <p className="text-xs text-accent-green font-semibold mt-0.5">{fmt(summary.new_revenue)} rev</p>
                 </div>
-                <div className="bg-surface-muted rounded-xl p-3">
-                  <p className="text-xs text-ink-tertiary mb-1">Repeat</p>
-                  <p className="font-bold text-ink text-base">{summary.repeat_transactions}</p>
-                  <p className="text-xs text-ink-secondary">{fmt(summary.repeat_spend_gbp)} spend</p>
-                  <p className="text-xs text-accent-green font-medium mt-0.5">{fmt(summary.repeat_revenue)} rev</p>
+                <div className="bg-surface-muted rounded-xl p-3.5 border border-surface-border">
+                  <p className="text-[10px] text-ink-tertiary uppercase tracking-wider mb-1">Repeat</p>
+                  <p className="font-bold text-ink text-lg font-tabular">{summary.repeat_transactions}</p>
+                  <p className="text-xs text-ink-secondary mt-0.5">{fmt(summary.repeat_spend_gbp)} spend</p>
+                  <p className="text-xs text-accent-green font-semibold mt-0.5">{fmt(summary.repeat_revenue)} rev</p>
                 </div>
               </div>
             </div>
@@ -182,11 +191,11 @@ export function InternalPartnerDetailClient({ summary }: Props) {
             <h3 className="font-semibold text-ink text-sm mb-3">Boost Activity</h3>
             {summary.boost_transactions > 0 ? (
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-ink-secondary">Boost txns</span>
                   <Badge label="time boost" variant="boost" />
                 </div>
-                <p className="text-2xl font-bold text-ink">{summary.boost_transactions}</p>
+                <p className="text-2xl font-bold text-ink font-tabular">{summary.boost_transactions}</p>
                 <p className="text-xs text-ink-tertiary">{fmt(summary.boost_spend_gbp)} spend · {fmt(summary.boost_revenue)} revenue</p>
               </div>
             ) : (
@@ -198,14 +207,19 @@ export function InternalPartnerDetailClient({ summary }: Props) {
 
       {/* Insights */}
       {summary.insights.length > 0 && (
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mb-8"
+        >
           <h3 className="font-semibold text-ink text-sm mb-3">Insights</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {summary.insights.map((insight, i) => (
               <InsightCard key={i} text={insight} index={i} />
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Monthly breakdown table */}
@@ -216,24 +230,24 @@ export function InternalPartnerDetailClient({ summary }: Props) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-surface-muted">
-                <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Month</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Status</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Txns</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Spend</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Revenue</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">New</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Repeat</th>
-                <th className="text-right px-6 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Users</th>
+              <tr className="bg-surface-muted/50">
+                <th className="text-left px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Month</th>
+                <th className="text-center px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Status</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Txns</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Spend</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Revenue</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">New</th>
+                <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Repeat</th>
+                <th className="text-right px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Users</th>
               </tr>
             </thead>
             <tbody>
-              {summary.monthly_breakdown.map((m, i) => {
+              {summary.monthly_breakdown.map((m) => {
                 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
                 const [y, mo] = m.year_month.split('-')
                 const label = `${months[parseInt(mo) - 1]} ${y}`
                 return (
-                  <tr key={m.year_month} className="border-t border-surface-border hover:bg-surface-muted/50 transition-colors">
+                  <tr key={m.year_month} className="border-t border-surface-border/60 hover:bg-surface-hover transition-colors duration-150">
                     <td className="px-6 py-3 font-medium text-ink">{label}</td>
                     <td className="px-4 py-3 text-center">
                       <Badge
@@ -241,12 +255,12 @@ export function InternalPartnerDetailClient({ summary }: Props) {
                         variant={m.is_on_yonder ? 'active' : 'inactive'}
                       />
                     </td>
-                    <td className="px-4 py-3 text-right text-ink-secondary">{m.settled_transactions}</td>
-                    <td className="px-4 py-3 text-right font-mono text-ink">{fmt(m.total_spend_gbp)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-accent-green font-semibold">{fmt(m.total_revenue)}</td>
-                    <td className="px-4 py-3 text-right text-ink-secondary">{m.new_transactions}</td>
-                    <td className="px-4 py-3 text-right text-ink-secondary">{m.repeat_transactions}</td>
-                    <td className="px-6 py-3 text-right text-ink-secondary">{m.unique_users}</td>
+                    <td className="px-4 py-3 text-right text-ink-secondary font-tabular">{m.settled_transactions}</td>
+                    <td className="px-4 py-3 text-right font-tabular text-ink font-medium">{fmt(m.total_spend_gbp)}</td>
+                    <td className="px-4 py-3 text-right font-tabular text-accent-green font-semibold">{fmt(m.total_revenue)}</td>
+                    <td className="px-4 py-3 text-right text-ink-secondary font-tabular">{m.new_transactions}</td>
+                    <td className="px-4 py-3 text-right text-ink-secondary font-tabular">{m.repeat_transactions}</td>
+                    <td className="px-6 py-3 text-right text-ink-secondary font-tabular">{m.unique_users}</td>
                   </tr>
                 )
               })}
