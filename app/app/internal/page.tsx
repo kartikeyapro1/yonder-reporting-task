@@ -2,12 +2,22 @@ import { Header } from '@/components/layout/Header'
 import { InternalDashboardClient } from './InternalDashboardClient'
 import { getAllPartnerSummaries } from '@/lib/reporting/partner-report-summary'
 import { getPartnerConfig } from '@/lib/config/partner-commercials'
+import { isOnYonder } from '@/lib/config/partner-periods'
+import type { Metadata } from 'next'
 import type { InternalDashboardRow } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
+export const metadata: Metadata = {
+  title: 'Partner Analytics',
+}
+
 export default function InternalDashboardPage() {
   const summaries = getAllPartnerSummaries()
+
+  // Current calendar month for determining active status
+  const now = new Date()
+  const currentMonth = now.toISOString().slice(0, 7) // "YYYY-MM"
 
   const rows: InternalDashboardRow[] = summaries.map(s => {
     const monthly = s.monthly_breakdown
@@ -21,6 +31,9 @@ export default function InternalDashboardPage() {
       else trend = delta > 0 ? 'up' : 'down'
     }
 
+    // Check against current calendar, not last data month
+    const isActive = isOnYonder(s.partner_name, new Date(`${currentMonth}-15`))
+
     return {
       partner_name: s.partner_name,
       display_name: s.display_name,
@@ -30,7 +43,7 @@ export default function InternalDashboardPage() {
       total_transactions: s.total_transactions,
       unique_users: s.unique_users,
       last_active_month: last?.year_month ?? '',
-      is_currently_active: last?.is_on_yonder ?? false,
+      is_currently_active: isActive,
       revenue_trend: trend,
     }
   })
@@ -38,10 +51,11 @@ export default function InternalDashboardPage() {
   const totalSpend = rows.reduce((s, r) => s + r.total_spend_gbp, 0)
   const totalRevenue = rows.reduce((s, r) => s + r.total_revenue, 0)
   const totalTx = rows.reduce((s, r) => s + r.total_transactions, 0)
+  // Note: this sums per-partner uniques — may overcount users shared across partners
   const totalUsers = rows.reduce((s, r) => s + r.unique_users, 0)
 
   return (
-    <div className="min-h-screen bg-surface-muted">
+    <div className="min-h-screen bg-gray-50">
       <Header section="internal" />
       <InternalDashboardClient
         rows={rows}

@@ -7,8 +7,8 @@
  * Incremental spend calculation (Scenario 1 / FRIVE):
  *   - "on Yonder" spend = total settled spend during active periods
  *   - "off Yonder" spend = total settled spend during inactive periods
- *   - incremental_spend = on_spend − off_spend (raw delta, not per-user normalised)
- *   - Assumes off-period spend represents organic baseline behaviour
+ *   - Normalised to per-month averages before computing the delta
+ *   - incremental_spend = avg_monthly_on − avg_monthly_off
  */
 
 import { getPartnerMonthlyMetrics } from '@/lib/reporting/partner-monthly-metrics'
@@ -36,15 +36,15 @@ function generateInsights(metrics: Omit<PartnerSummaryMetrics, 'insights' | 'mon
     ? metrics.total_revenue / metrics.unique_users
     : 0
 
-  // Incremental spend comparison (show both sides, not just the delta)
-  if (metrics.on_yonder_spend > 0 && metrics.off_yonder_spend > 0) {
+  // Per-month on/off comparison (only when both sides have data)
+  if (metrics.on_months_count > 0 && metrics.off_months_count > 0) {
     const sign = metrics.incremental_spend >= 0 ? '+' : ''
     insights.push(
-      `On-Yonder months: ${formatGbp(metrics.on_yonder_spend)} spend. Off-Yonder months: ${formatGbp(metrics.off_yonder_spend)}. Delta: ${sign}${formatGbp(metrics.incremental_spend)}.`
+      `Avg. monthly spend when rewards were active: ${formatGbp(metrics.avg_monthly_on_spend)} (${metrics.on_months_count} months). When inactive: ${formatGbp(metrics.avg_monthly_off_spend)} (${metrics.off_months_count} months). Per-month uplift: ${sign}${formatGbp(metrics.incremental_spend)}.`
     )
-  } else if (metrics.on_yonder_spend > 0) {
+  } else if (metrics.on_yonder_spend > 0 && metrics.off_months_count === 0) {
     insights.push(
-      `All recorded spend (${formatGbp(metrics.on_yonder_spend)}) occurred during active Yonder months.`
+      `All recorded spend (${formatGbp(metrics.on_yonder_spend)}) occurred during active Yonder months — no inactive comparison period available yet.`
     )
   }
 
@@ -57,7 +57,7 @@ function generateInsights(metrics: Omit<PartnerSummaryMetrics, 'insights' | 'mon
   if (metrics.boost_transactions > 0) {
     const boostPct = (metrics.boost_transactions / metrics.total_transactions) * 100
     insights.push(
-      `${metrics.boost_transactions.toLocaleString()} transactions (${boostPct.toFixed(0)}%) matched a time-boost window, contributing ${formatGbp(metrics.boost_revenue)} of total revenue.`
+      `${metrics.boost_transactions.toLocaleString()} transactions (${boostPct.toFixed(0)}%) occurred during time-boost promotional windows, generating ${formatGbp(metrics.boost_spend_gbp)} in spend.`
     )
   }
 
@@ -84,7 +84,8 @@ export function getPartnerReportSummary(partnerName: string): PartnerSummaryMetr
   const facts = getPartnerTransactionFacts(partnerName)
 
   const baseline = new Date(config.baseline_date)
-  const inScope = monthly.filter(m => m.year_month >= config.baseline_date.slice(0, 7))
+  const baselineYm = config.baseline_date.slice(0, 7)
+  const inScope = monthly.filter(m => m.year_month >= baselineYm)
 
   const onFacts = facts.filter(f => f.is_settled && f.is_on_yonder && f.timestamp >= baseline)
   const offFacts = facts.filter(f => f.is_settled && !f.is_on_yonder && f.timestamp >= baseline)
@@ -92,12 +93,18 @@ export function getPartnerReportSummary(partnerName: string): PartnerSummaryMetr
   const on_spend = onFacts.reduce((s, f) => s + f.trans_amount_gbp, 0)
   const off_spend = offFacts.reduce((s, f) => s + f.trans_amount_gbp, 0)
 
+  // Count distinct on/off months (post-baseline only)
+  const on_months_count = inScope.filter(m => m.is_on_yonder).length
+  const off_months_count = inScope.filter(m => !m.is_on_yonder).length
+  const avg_monthly_on_spend = on_months_count > 0 ? on_spend / on_months_count : 0
+  const avg_monthly_off_spend = off_months_count > 0 ? off_spend / off_months_count : 0
+
   const settled = facts.filter(f => f.is_settled && f.timestamp >= baseline)
   const newFacts = settled.filter(f => f.is_new_customer)
   const repeatFacts = settled.filter(f => !f.is_new_customer)
   const boostFacts = settled.filter(f => f.is_boost)
 
-  const lastMonth = inScope.length > 0 ? inScope[inScope.length - 1].year_month : config.baseline_date.slice(0, 7)
+  const lastMonth = inScope.length > 0 ? inScope[inScope.length - 1].year_month : baselineYm
   const firstMonth = inScope.length > 0 ? inScope[0].year_month : lastMonth
 
   const partialMetrics = {
@@ -126,12 +133,20 @@ export function getPartnerReportSummary(partnerName: string): PartnerSummaryMetr
 
     on_yonder_spend: on_spend,
     off_yonder_spend: off_spend,
-    incremental_spend: on_spend - off_spend,
+    on_months_count,
+    off_months_count,
+    avg_monthly_on_spend,
+    avg_monthly_off_spend,
+    // Per-month normalised delta: only meaningful when both sides have data
+    incremental_spend: (on_months_count > 0 && off_months_count > 0)
+      ? avg_monthly_on_spend - avg_monthly_off_spend
+      : on_spend - off_spend,
   }
 
   const summary: PartnerSummaryMetrics = {
     ...partialMetrics,
-    monthly_breakdown: monthly,
+    // Only include post-baseline months in the breakdown
+    monthly_breakdown: inScope,
     insights: generateInsights(partialMetrics),
   }
 

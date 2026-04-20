@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Badge } from '@/components/ui/Badge'
-import CountUp from '@/components/ui/CountUp'
 import BlurText from '@/components/ui/BlurText'
+import CountUp from '@/components/ui/CountUp'
+import { FadeIn, StaggerList, StaggerItem } from '@/components/motion'
 import type { InternalDashboardRow } from '@/lib/types'
 
 interface Props {
@@ -17,6 +17,9 @@ interface Props {
     totalUsers: number
   }
 }
+
+type SortKey = 'display_name' | 'category' | 'total_spend_gbp' | 'total_revenue' | 'total_transactions' | 'unique_users' | 'last_active_month' | 'is_currently_active'
+type SortDir = 'asc' | 'desc'
 
 function fmt(n: number) {
   if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(2)}m`
@@ -31,109 +34,42 @@ function fmtMonth(ym: string) {
   return `${months[parseInt(m) - 1]} ${y}`
 }
 
-/** Animated stat for the hero area */
-function HeroStat({
-  label,
-  value,
-  countTo,
-  prefix = '',
-  suffix = '',
-  separator = '',
-  delay,
-}: {
-  label: string
-  value: string
-  countTo?: number
-  prefix?: string
-  suffix?: string
-  separator?: string
-  delay: number
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay }}
-      className="text-center"
-    >
-      <p className="text-3xl md:text-4xl font-bold text-white font-tabular tracking-tight">
-        {countTo !== undefined ? (
-          <>
-            {prefix}
-            <CountUp to={countTo} duration={2} delay={delay} separator={separator} />
-            {suffix}
-          </>
-        ) : (
-          value
-        )}
-      </p>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mt-2">{label}</p>
-    </motion.div>
-  )
-}
-
-/** Featured partner card for the hub */
-function FeaturedCard({ row, index }: { row: InternalDashboardRow; index: number }) {
-  const router = useRouter()
-  const slug = row.partner_name.toLowerCase().replace(/\s+/g, '-')
-  const isUp = row.revenue_trend === 'up'
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 + index * 0.07 }}
-      whileHover={{ y: -4, transition: { duration: 0.25 } }}
-      onClick={() => router.push(`/internal/partner/${slug}`)}
-      className="group relative bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/[0.12] rounded-2xl p-5 cursor-pointer transition-all duration-300 overflow-hidden"
-    >
-      {/* Coral accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-coral-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-coral-gradient flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-glow-coral/30">
-            {row.display_name[0]}
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-white group-hover:text-coral-light transition-colors duration-200">
-              {row.display_name}
-            </p>
-            <p className="text-[11px] text-white/30">{row.category}</p>
-          </div>
-        </div>
-        <Badge label={row.is_currently_active ? 'Active' : 'Inactive'} variant={row.is_currently_active ? 'active' : 'inactive'} pulse={row.is_currently_active} />
-      </div>
-
-      <div className="grid grid-cols-3 gap-3 mt-4">
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-white/25 mb-0.5">Spend</p>
-          <p className="text-sm font-bold text-white font-tabular">{fmt(row.total_spend_gbp)}</p>
-        </div>
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-white/25 mb-0.5">Revenue</p>
-          <p className="text-sm font-bold text-accent-green font-tabular">{fmt(row.total_revenue)}</p>
-        </div>
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-white/25 mb-0.5">Trend</p>
-          <p className={`text-sm font-bold ${isUp ? 'text-accent-green' : row.revenue_trend === 'down' ? 'text-accent-red' : 'text-white/40'}`}>
-            {isUp ? '↑ Up' : row.revenue_trend === 'down' ? '↓ Down' : '→ Flat'}
-          </p>
-        </div>
-      </div>
-    </motion.div>
-  )
+function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
+  if (!active) return <span className="ml-1 text-gray-300 opacity-0 group-hover/th:opacity-100 transition-opacity">↕</span>
+  return <span className="ml-1 text-coral">{dir === 'asc' ? '↑' : '↓'}</span>
 }
 
 export function InternalDashboardClient({ rows, totals }: Props) {
   const router = useRouter()
   const [search, setSearch] = useState('')
-  const [view, setView] = useState<'table' | 'grid'>('table')
+  const [sortKey, setSortKey] = useState<SortKey>('total_revenue')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
-  const filtered = rows.filter(r =>
-    r.display_name.toLowerCase().includes(search.toLowerCase()) ||
-    r.category.toLowerCase().includes(search.toLowerCase())
-  )
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir(key === 'display_name' || key === 'category' ? 'asc' : 'desc')
+    }
+  }
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase()
+    const base = rows.filter(r =>
+      r.display_name.toLowerCase().includes(q) ||
+      r.category.toLowerCase().includes(q)
+    )
+    return [...base].sort((a, b) => {
+      const av = a[sortKey]
+      const bv = b[sortKey]
+      let cmp = 0
+      if (typeof av === 'string' && typeof bv === 'string') cmp = av.localeCompare(bv)
+      else if (typeof av === 'boolean' && typeof bv === 'boolean') cmp = (av === bv ? 0 : av ? 1 : -1)
+      else cmp = (av as number) - (bv as number)
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [rows, search, sortKey, sortDir])
 
   const activeCount = rows.filter(r => r.is_currently_active).length
   const topPartners = [...rows]
@@ -141,282 +77,225 @@ export function InternalDashboardClient({ rows, totals }: Props) {
     .sort((a, b) => b.total_revenue - a.total_revenue)
     .slice(0, 4)
 
+  const stats = [
+    { label: 'Total spend', value: totals.totalSpend, prefix: '£' },
+    { label: 'Revenue', value: totals.totalRevenue, prefix: '£' },
+    { label: 'Transactions', value: totals.totalTx, prefix: '' },
+    { label: 'Unique users', value: totals.totalUsers, prefix: '' },
+  ]
+
   return (
-    <div className="min-h-screen bg-navy-950">
+    <div className="min-h-screen bg-sand-50">
+      <div className="max-w-screen-xl mx-auto px-6">
 
-      {/* ── Hero section with mesh gradient ────────────────────────── */}
-      <div className="relative overflow-hidden">
-        {/* Background effects */}
-        <div className="absolute inset-0 bg-navy-radial" />
-        <div className="absolute inset-0 bg-hero-mesh opacity-60" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-coral/[0.03] blur-[120px] rounded-full" />
-
-        <div className="relative max-w-screen-xl mx-auto px-6 pt-12 pb-14">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-10"
-          >
-            <BlurText
-              text="Partner Analytics"
-              className="text-3xl md:text-4xl font-bold text-white tracking-tight"
-              animateBy="words"
-              direction="top"
-              delay={120}
-              stepDuration={0.4}
-            />
-          </motion.div>
-
-          {/* Hero stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-            <HeroStat label="Total Spend" value={fmt(totals.totalSpend)} delay={0.1} />
-            <HeroStat label="Revenue" value={fmt(totals.totalRevenue)} delay={0.15} />
-            <HeroStat label="Transactions" value={totals.totalTx.toLocaleString()} countTo={totals.totalTx} separator="," delay={0.2} />
-            <HeroStat label="Unique Users" value={totals.totalUsers.toLocaleString()} countTo={totals.totalUsers} separator="," delay={0.25} />
-          </div>
-
-          {/* Active / Total indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="flex items-center gap-3 mt-10 pt-6 border-t border-white/[0.06]"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-green opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-green" />
-            </span>
-            <span className="text-[13px] text-white/40">
-              <span className="text-accent-green font-semibold">{activeCount}</span> of {rows.length} partners currently active
-            </span>
-          </motion.div>
+        {/* ── Page header ──────────────────────────────────── */}
+        <div className="pt-12 pb-10">
+          <BlurText
+            text="Partner Analytics"
+            className="text-3xl font-display font-semibold text-ink-900 tracking-display"
+            delay={60}
+            animateBy="words"
+          />
+          <FadeIn delay={0.3} y={12}>
+            <p className="text-sm text-ink-400 mt-2">
+              <span className="text-positive font-semibold">{activeCount}</span> of {rows.length} partners currently active
+            </p>
+          </FadeIn>
         </div>
-      </div>
 
-      {/* ── Featured Partners Hub ─────────────────────────────────── */}
-      {topPartners.length > 0 && (
-        <div className="max-w-screen-xl mx-auto px-6 -mt-2 mb-8">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-1 h-5 rounded-full bg-coral-gradient" />
-                <h2 className="text-sm font-semibold text-white/80">Featured Partners</h2>
+        {/* ── Stats row ────────────────────────────────────── */}
+        <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          {stats.map(s => (
+            <StaggerItem key={s.label}>
+              <div className="rounded-2xl border border-gray-200/80 bg-white px-5 py-5 shadow-card hover:shadow-float transition-shadow duration-400">
+                <p className="text-xs font-medium text-ink-400 uppercase tracking-caps mb-2">{s.label}</p>
+                <p className="text-2xl font-semibold text-ink-900 font-tabular">
+                  {s.prefix}
+                  <CountUp
+                    to={s.value >= 1_000_000 ? parseFloat((s.value / 1_000_000).toFixed(2)) : s.value >= 1000 ? parseFloat((s.value / 1000).toFixed(1)) : s.value}
+                    duration={1.6}
+                    separator=","
+                  />
+                  {s.value >= 1_000_000 ? 'm' : s.value >= 1000 ? 'k' : ''}
+                </p>
               </div>
-              <p className="text-[11px] text-white/20 uppercase tracking-wider">Top performers by revenue</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {topPartners.map((row, i) => (
-                <FeaturedCard key={row.partner_name} row={row} index={i} />
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </StaggerItem>
+          ))}
+        </StaggerList>
 
-      {/* ── Partner table ─────────────────────────────────────────── */}
-      <div className="max-w-screen-xl mx-auto px-6 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-          className="bg-white rounded-2xl shadow-card-lg overflow-hidden"
-        >
-
-          {/* Table toolbar */}
-          <div className="px-6 py-4 border-b border-surface-border flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-sm font-semibold text-ink">All Partners</h2>
-              <span className="text-[11px] text-ink-tertiary bg-surface-muted px-2 py-0.5 rounded-md font-medium">
-                {filtered.length}
-              </span>
+        {/* ── Featured partners ────────────────────────────── */}
+        {topPartners.length > 0 && (
+          <FadeIn delay={0.2}>
+            <div className="mb-10">
+              <p className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps mb-4">
+                Top partners by revenue
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {topPartners.map(row => {
+                  const slug = row.partner_name.toLowerCase().replace(/\s+/g, '-')
+                  const isUp = row.revenue_trend === 'up'
+                  return (
+                    <div
+                      key={row.partner_name}
+                      onClick={() => router.push(`/internal/partner/${slug}`)}
+                      className="group bg-white rounded-2xl border border-gray-200/80 p-5 cursor-pointer
+                        hover:shadow-float hover:border-coral/20 hover:-translate-y-0.5
+                        transition-all duration-400 ease-out-expo"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-xl bg-ink-900 flex items-center justify-center text-white font-semibold text-xs shrink-0">
+                          {row.display_name[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-ink-800 group-hover:text-coral transition-colors duration-300">
+                            {row.display_name}
+                          </p>
+                          <p className="text-[11px] text-ink-300">{row.category}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
+                        <div>
+                          <p className="text-[10px] text-ink-300 mb-0.5">Spend</p>
+                          <p className="text-xs font-semibold text-ink-800 font-tabular">{fmt(row.total_spend_gbp)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-ink-300 mb-0.5">Revenue</p>
+                          <p className="text-xs font-semibold text-positive font-tabular">{fmt(row.total_revenue)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-ink-300 mb-0.5">Trend</p>
+                          <p className={`text-xs font-semibold ${isUp ? 'text-positive' : row.revenue_trend === 'down' ? 'text-negative' : 'text-ink-300'}`}>
+                            {isUp ? '↑ Up' : row.revenue_trend === 'down' ? '↓ Down' : '→ Flat'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Search */}
+          </FadeIn>
+        )}
+
+        {/* ── Partner table ────────────────────────────────── */}
+        <FadeIn delay={0.3}>
+          <div className="bg-white rounded-2xl border border-gray-200/80 shadow-card overflow-hidden mb-16">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-sm font-semibold text-ink-800">All partners</h2>
+                <span className="text-[11px] text-ink-400 bg-sand-100 px-2 py-0.5 rounded-full font-medium">
+                  {filtered.length}
+                </span>
+              </div>
               <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search partners…"
+                  placeholder="Search…"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-56 text-[13px] pl-9 pr-3 py-2 rounded-xl border border-surface-border bg-surface-muted/50 outline-none focus:ring-2 focus:ring-coral/15 focus:border-coral/30 transition-all duration-200 placeholder:text-ink-tertiary"
+                  aria-label="Search partners"
+                  className="w-52 text-sm pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-sand-50
+                    outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/30
+                    transition-all duration-300 placeholder:text-gray-400"
                 />
               </div>
-              {/* View toggle */}
-              <div className="flex bg-surface-muted rounded-lg p-0.5">
-                {(['table', 'grid'] as const).map(v => (
-                  <button
-                    key={v}
-                    onClick={() => setView(v)}
-                    className={`px-3 py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-all duration-200 ${
-                      view === v
-                        ? 'bg-white text-ink shadow-sm'
-                        : 'text-ink-tertiary hover:text-ink-secondary'
-                    }`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
             </div>
-          </div>
 
-          <AnimatePresence mode="wait">
-            {view === 'table' ? (
-              <motion.div
-                key="table"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-surface-muted/50">
-                      {['Partner', 'Category', 'Spend', 'Revenue', 'Txns', 'Users', 'Last Month', 'Status'].map((h, i) => (
-                        <th
-                          key={h}
-                          className={`py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary ${
-                            i === 0 ? 'text-left px-6' : i <= 1 ? 'text-left px-4' : i >= 6 ? 'px-6' : 'text-right px-4'
-                          }`}
-                        >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.length === 0 ? (
-                      <tr>
-                        <td colSpan={8} className="px-6 py-20 text-center">
-                          <div className="flex flex-col items-center gap-2">
-                            <div className="w-10 h-10 rounded-full bg-surface-muted flex items-center justify-center">
-                              <svg className="w-5 h-5 text-ink-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                              </svg>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-sand-50/80">
+                  <th onClick={() => toggleSort('display_name')} role="columnheader" aria-sort={sortKey === 'display_name' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('display_name')} className="group/th text-left px-6 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                    Partner<SortIcon active={sortKey === 'display_name'} dir={sortDir} />
+                  </th>
+                  <th onClick={() => toggleSort('category')} role="columnheader" aria-sort={sortKey === 'category' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('category')} className="group/th text-left px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                    Category<SortIcon active={sortKey === 'category'} dir={sortDir} />
+                  </th>
+                  <th onClick={() => toggleSort('total_spend_gbp')} role="columnheader" aria-sort={sortKey === 'total_spend_gbp' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_spend_gbp')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                    Spend<SortIcon active={sortKey === 'total_spend_gbp'} dir={sortDir} />
+                  </th>
+                  <th onClick={() => toggleSort('total_revenue')} role="columnheader" aria-sort={sortKey === 'total_revenue' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_revenue')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                    Fee earned<SortIcon active={sortKey === 'total_revenue'} dir={sortDir} />
+                  </th>
+                  <th onClick={() => toggleSort('total_transactions')} role="columnheader" aria-sort={sortKey === 'total_transactions' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_transactions')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                    Txns<SortIcon active={sortKey === 'total_transactions'} dir={sortDir} />
+                  </th>
+                  <th onClick={() => toggleSort('unique_users')} role="columnheader" aria-sort={sortKey === 'unique_users' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('unique_users')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                    Customers<SortIcon active={sortKey === 'unique_users'} dir={sortDir} />
+                  </th>
+                  <th onClick={() => toggleSort('last_active_month')} role="columnheader" aria-sort={sortKey === 'last_active_month' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('last_active_month')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                    Last active<SortIcon active={sortKey === 'last_active_month'} dir={sortDir} />
+                  </th>
+                  <th onClick={() => toggleSort('is_currently_active')} role="columnheader" aria-sort={sortKey === 'is_currently_active' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('is_currently_active')} className="group/th text-center px-6 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                    Status<SortIcon active={sortKey === 'is_currently_active'} dir={sortDir} />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-20 text-center text-sm text-ink-300">
+                      {search ? `No partners match "${search}"` : 'No partner data available.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map(row => {
+                    const slug = row.partner_name.toLowerCase().replace(/\s+/g, '-')
+                    const trendIcon = row.revenue_trend === 'up' ? '↑' : row.revenue_trend === 'down' ? '↓' : null
+                    const trendCls  = row.revenue_trend === 'up' ? 'text-positive' : row.revenue_trend === 'down' ? 'text-negative' : ''
+                    return (
+                      <tr
+                        key={row.partner_name}
+                        onClick={() => router.push(`/internal/partner/${slug}`)}
+                        onKeyDown={e => e.key === 'Enter' && router.push(`/internal/partner/${slug}`)}
+                        tabIndex={0}
+                        role="link"
+                        aria-label={`View ${row.display_name} details`}
+                        className="group border-t border-gray-100/80 hover:bg-coral-50/40 cursor-pointer
+                          transition-colors duration-200 focus-visible:bg-coral-50/40"
+                      >
+                        <td className="px-6 py-3.5 relative">
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-full bg-coral
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 rounded-lg bg-ink-900 flex items-center justify-center text-white font-semibold text-[11px] shrink-0
+                              group-hover:bg-coral transition-colors duration-300">
+                              {row.display_name[0]}
                             </div>
-                            <p className="text-ink-tertiary text-sm">
-                              {search ? `No partners match "${search}"` : 'No partner data available.'}
-                            </p>
+                            <span className="font-medium text-ink-800 group-hover:text-ink-950 transition-colors">{row.display_name}</span>
                           </div>
                         </td>
+                        <td className="px-4 py-3.5 text-ink-400 text-xs">{row.category}</td>
+                        <td className="px-4 py-3.5 text-right font-tabular text-ink-800">{fmt(row.total_spend_gbp)}</td>
+                        <td className="px-4 py-3.5 text-right font-tabular">
+                          <span className="text-coral font-medium">{fmt(row.total_revenue)}</span>
+                          {trendIcon && <span className={`ml-1 text-xs ${trendCls}`}>{trendIcon}</span>}
+                        </td>
+                        <td className="px-4 py-3.5 text-right font-tabular text-ink-400">{row.total_transactions.toLocaleString()}</td>
+                        <td className="px-4 py-3.5 text-right font-tabular text-ink-400">{row.unique_users.toLocaleString()}</td>
+                        <td className="px-4 py-3.5 text-right text-ink-300 text-xs">{fmtMonth(row.last_active_month)}</td>
+                        <td className="px-6 py-3.5 text-center">
+                          <Badge
+                            label={row.is_currently_active ? 'Active' : 'Inactive'}
+                            variant={row.is_currently_active ? 'active' : 'inactive'}
+                          />
+                        </td>
                       </tr>
-                    ) : (
-                      filtered.map((row, i) => {
-                        const slug = row.partner_name.toLowerCase().replace(/\s+/g, '-')
-                        const trendIcon = row.revenue_trend === 'up' ? '↑' : row.revenue_trend === 'down' ? '↓' : null
-                        const trendCls  = row.revenue_trend === 'up' ? 'text-accent-green' : row.revenue_trend === 'down' ? 'text-accent-red' : ''
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
 
-                        return (
-                          <motion.tr
-                            key={row.partner_name}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: i * 0.025 }}
-                            onClick={() => router.push(`/internal/partner/${slug}`)}
-                            className="border-t border-surface-border/60 hover:bg-surface-hover cursor-pointer transition-colors duration-150 group"
-                          >
-                            <td className="px-6 py-3.5">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-xl bg-navy-900 flex items-center justify-center text-white font-bold text-xs shrink-0 group-hover:bg-coral-gradient transition-all duration-300">
-                                  {row.display_name[0]}
-                                </div>
-                                <span className="font-semibold text-ink group-hover:text-coral transition-colors duration-200">
-                                  {row.display_name}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3.5 text-ink-secondary text-xs">{row.category}</td>
-                            <td className="px-4 py-3.5 text-right font-tabular text-ink font-medium">{fmt(row.total_spend_gbp)}</td>
-                            <td className="px-4 py-3.5 text-right font-tabular">
-                              <span className="text-accent-green font-semibold">{fmt(row.total_revenue)}</span>
-                              {trendIcon && (
-                                <span className={`ml-1.5 text-xs font-bold ${trendCls}`}>{trendIcon}</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3.5 text-right font-tabular text-ink-secondary">{row.total_transactions.toLocaleString()}</td>
-                            <td className="px-4 py-3.5 text-right font-tabular text-ink-secondary">{row.unique_users.toLocaleString()}</td>
-                            <td className="px-6 py-3.5 text-right text-ink-tertiary text-xs">{fmtMonth(row.last_active_month)}</td>
-                            <td className="px-6 py-3.5">
-                              <Badge
-                                label={row.is_currently_active ? 'Active' : 'Inactive'}
-                                variant={row.is_currently_active ? 'active' : 'inactive'}
-                              />
-                            </td>
-                          </motion.tr>
-                        )
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </motion.div>
-            ) : (
-              /* Grid view */
-              <motion.div
-                key="grid"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-              >
-                {filtered.map((row, i) => {
-                  const slug = row.partner_name.toLowerCase().replace(/\s+/g, '-')
-                  return (
-                    <motion.div
-                      key={row.partner_name}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.04, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                      whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                      onClick={() => router.push(`/internal/partner/${slug}`)}
-                      className="group border border-surface-border rounded-2xl p-5 cursor-pointer hover:shadow-card hover:border-coral/20 transition-all duration-300"
-                    >
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-navy-900 flex items-center justify-center text-white font-bold text-sm shrink-0 group-hover:bg-coral-gradient transition-all duration-300">
-                          {row.display_name[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-ink text-sm truncate group-hover:text-coral transition-colors">{row.display_name}</p>
-                          <p className="text-[11px] text-ink-tertiary">{row.category}</p>
-                        </div>
-                        <Badge
-                          label={row.is_currently_active ? 'Active' : 'Off'}
-                          variant={row.is_currently_active ? 'active' : 'inactive'}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-ink-tertiary">Spend</p>
-                          <p className="font-bold text-ink font-tabular text-sm">{fmt(row.total_spend_gbp)}</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-ink-tertiary">Revenue</p>
-                          <p className="font-bold text-accent-green font-tabular text-sm">{fmt(row.total_revenue)}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )
-                })}
-              </motion.div>
+            {filtered.length > 0 && (
+              <div className="px-6 py-3 border-t border-gray-100 text-xs text-ink-300">
+                Showing {filtered.length} of {rows.length} partners
+              </div>
             )}
-          </AnimatePresence>
-
-          {/* Footer count */}
-          {filtered.length > 0 && (
-            <div className="px-6 py-3 border-t border-surface-border bg-surface-muted/50 text-xs text-ink-tertiary flex items-center justify-between">
-              <span>Showing {filtered.length} of {rows.length} partners</span>
-              <span className="text-ink-tertiary/50">Powered by Yonder</span>
-            </div>
-          )}
-        </motion.div>
+          </div>
+        </FadeIn>
       </div>
     </div>
   )

@@ -20,6 +20,7 @@ export const PARTNER_CONFIGS: PartnerConfig[] = [
     display_name: 'Frive',
     category: 'Food & Drink',
     baseline_date: '2025-01-01',
+    partner_token: 'f8a2d1e94c37',
     active_periods: [], // populated from partner-periods.ts at runtime
     commercials: [
       {
@@ -36,6 +37,7 @@ export const PARTNER_CONFIGS: PartnerConfig[] = [
     display_name: 'Gopuff',
     category: 'Delivery',
     baseline_date: '2025-12-01',
+    partner_token: '4b7c3f2a8e51',
     active_periods: [],
     commercials: [
       {
@@ -54,6 +56,22 @@ export const PARTNER_CONFIGS: PartnerConfig[] = [
  */
 export function getPartnerConfig(partnerName: string): PartnerConfig | undefined {
   return PARTNER_CONFIGS.find(c => c.partner_name === partnerName)
+}
+
+/**
+ * Retrieve config by the opaque partner token (for partner-facing routes).
+ */
+export function getPartnerByToken(token: string): PartnerConfig | undefined {
+  return PARTNER_CONFIGS.find(c => c.partner_token === token)
+}
+
+/**
+ * Retrieve config by URL slug (for internal routes).
+ */
+export function getPartnerBySlug(slug: string): PartnerConfig | undefined {
+  return PARTNER_CONFIGS.find(
+    c => c.partner_name.toLowerCase().replace(/\s+/g, '-') === slug
+  )
 }
 
 /**

@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { getPartnerReportSummary } from '@/lib/reporting/partner-report-summary'
-import { PARTNER_CONFIGS } from '@/lib/config/partner-commercials'
+import { getPartnerBySlug } from '@/lib/config/partner-commercials'
 
 interface Params {
   params: Promise<{ id: string }>
@@ -14,10 +14,7 @@ interface Params {
 export async function GET(_req: Request, { params }: Params) {
   const { id } = await params
 
-  // Find partner by slug (lowercased name)
-  const config = PARTNER_CONFIGS.find(
-    c => c.partner_name.toLowerCase().replace(/\s+/g, '-') === id
-  )
+  const config = getPartnerBySlug(id)
 
   if (!config) {
     return NextResponse.json({ error: 'Partner not found' }, { status: 404 })

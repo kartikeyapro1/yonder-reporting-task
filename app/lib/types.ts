@@ -118,6 +118,7 @@ export interface PartnerConfig {
   display_name: string
   category: string
   baseline_date: string     // ISO date — first month to report from
+  partner_token: string     // opaque URL token for partner-facing routes
   active_periods: PartnerActivePeriod[]
   commercials: CommercialModel[]
 }
@@ -176,7 +177,11 @@ export interface PartnerSummaryMetrics {
 
   on_yonder_spend: number
   off_yonder_spend: number
-  incremental_spend: number      // on - off (normalised to same period length)
+  on_months_count: number
+  off_months_count: number
+  avg_monthly_on_spend: number    // on_yonder_spend / on_months_count
+  avg_monthly_off_spend: number   // off_yonder_spend / off_months_count
+  incremental_spend: number       // avg_monthly_on - avg_monthly_off (per-month normalised)
 
   monthly_breakdown: PartnerMonthlyMetrics[]
 

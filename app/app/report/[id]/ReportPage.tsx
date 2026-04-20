@@ -1,8 +1,10 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { SpendTrendChart } from '@/components/charts/SpendTrendChart'
 import { NewVsExistingChart } from '@/components/charts/NewVsExistingChart'
+import { OnOffComparisonChart } from '@/components/charts/OnOffComparisonChart'
+import { YonderLogo } from '@/components/brand/YonderLogo'
+import { FadeIn, StaggerList, StaggerItem } from '@/components/motion'
 import type { PartnerSummaryMetrics, CommercialModel } from '@/lib/types'
 
 interface Props {
@@ -16,16 +18,22 @@ function fmt(n: number) {
   return `£${n.toFixed(2)}`
 }
 
+function fmtPlain(n: number) {
+  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(2)}m`
+  if (n >= 1000) return `£${(n / 1000).toFixed(1)}k`
+  return `£${Math.round(n)}`
+}
+
 function describeModel(model: CommercialModel): string {
   switch (model.type) {
     case 'cpa_new_repeat':
-      return `CPA — £${model.cpa_new} new customer · £${model.cpa_repeat} repeat customer`
+      return `CPA — £${model.cpa_new} per new customer · £${model.cpa_repeat} per repeat customer`
     case 'pct_spend_new_repeat':
       return `Commission — ${((model.pct_new ?? 0) * 100).toFixed(0)}% on new spend · ${((model.pct_repeat ?? 0) * 100).toFixed(0)}% on repeat spend`
     case 'blended_commission':
       return `Blended commission — ${((model.blended_rate ?? 0) * 100).toFixed(1)}% on all spend`
     case 'fixed_fee':
-      return `Fixed fee — ${fmt(model.fixed_monthly ?? 0)} /month`
+      return `Fixed fee — ${fmtPlain(model.fixed_monthly ?? 0)} per month`
     default:
       return model.type
   }
@@ -34,20 +42,17 @@ function describeModel(model: CommercialModel): string {
 function SectionHeader({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="mb-5">
-      <div className="flex items-center gap-2.5">
-        <div className="w-1 h-5 rounded-full bg-coral-gradient print:bg-coral" />
-        <h2 className="text-base font-bold text-ink tracking-tight">{title}</h2>
-      </div>
-      {sub && <p className="text-[11px] text-ink-tertiary mt-1 ml-[18px]">{sub}</p>}
+      <h2 className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps">{title}</h2>
+      {sub && <p className="text-[11px] text-ink-300 mt-1">{sub}</p>}
     </div>
   )
 }
 
-function DataRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function DataRow({ label, value, highlight, large }: { label: string; value: string; highlight?: boolean; large?: boolean }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-surface-border/60 last:border-0">
-      <span className="text-sm text-ink-secondary">{label}</span>
-      <span className={`text-sm font-semibold font-tabular ${highlight ? 'text-accent-green' : 'text-ink'}`}>{value}</span>
+    <div className="flex items-baseline justify-between py-2.5 border-b border-sand-100 last:border-0">
+      <span className="text-sm text-ink-400">{label}</span>
+      <span className={`font-semibold font-tabular ${large ? 'text-base' : 'text-sm'} ${highlight ? 'text-coral' : 'text-ink-900'}`}>{value}</span>
     </div>
   )
 }
@@ -66,238 +71,302 @@ export function ReportPage({ summary, commercials }: Props) {
     ? (summary.total_revenue / summary.total_spend_gbp) * 100
     : 0
 
+  const repeatRate = summary.total_transactions > 0
+    ? (summary.repeat_transactions / summary.total_transactions) * 100
+    : 0
+
+  const hasOnOff = summary.on_months_count > 0 && summary.off_months_count > 0
+  const incrementalPositive = summary.incremental_spend > 0
+  const activeMonthCount = summary.on_months_count
+  const inactiveMonthCount = summary.off_months_count
+
   return (
-    <div className="min-h-screen bg-white print:bg-white">
-      {/* Report header */}
-      <div className="bg-navy-gradient text-white print:bg-navy-950 relative overflow-hidden">
-        <div className="absolute inset-0 bg-hero-mesh opacity-30 print:hidden" />
-        <div className="max-w-3xl mx-auto px-8 py-12 relative">
-          <div className="flex items-start justify-between">
+    <div className="min-h-screen bg-sand-50 print:bg-white">
+
+      {/* ── Report header ─────────────────────────────────────────── */}
+      <div className="bg-ink-950 text-white print:bg-ink-950">
+        <div className="max-w-3xl mx-auto px-8 py-12">
+
+          <div className="flex items-start justify-between mb-8">
             <div>
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-coral-gradient flex items-center justify-center shadow-glow-coral/20">
-                  <span className="text-white text-xs font-bold">Y</span>
-                </div>
-                <span className="text-white/50 text-[11px] font-semibold uppercase tracking-[0.12em]">Yonder Partner Report</span>
+              <div className="flex items-center gap-3 mb-5">
+                <YonderLogo variant="light" size="sm" showWordmark={false} />
+                <span className="text-white/40 text-[11px] font-semibold uppercase tracking-caps">Yonder · Partner Report</span>
               </div>
-              <h1 className="text-3xl font-bold tracking-tight">{summary.display_name}</h1>
-              <p className="text-white/40 mt-1.5 text-sm">{summary.period_label}</p>
+              <h1 className="text-3xl font-display font-semibold tracking-display text-white">{summary.display_name}</h1>
+              <p className="text-white/35 mt-1.5 text-sm">{summary.period_label}</p>
             </div>
-            <div className="text-right text-[11px] text-white/30">
+            <div className="text-right text-[11px] text-white/25 shrink-0 mt-1">
               <p>Generated {generatedAt}</p>
               <p className="mt-0.5">Confidential</p>
             </div>
           </div>
 
-          {/* Headline KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-10">
+          {/* Hero KPIs */}
+          <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: 'Total Spend', value: fmt(summary.total_spend_gbp) },
-              { label: 'Revenue Earned', value: fmt(summary.total_revenue) },
-              { label: 'Transactions', value: summary.total_transactions.toLocaleString() },
-              { label: 'Customers', value: summary.unique_users.toLocaleString() },
-            ].map((kpi, i) => (
-              <motion.div
-                key={kpi.label}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="bg-white/[0.06] backdrop-blur-sm rounded-xl px-4 py-3.5 border border-white/[0.08]"
-              >
-                <p className="text-white/40 text-[10px] font-semibold uppercase tracking-[0.1em] mb-1.5">{kpi.label}</p>
-                <p className="text-white text-xl font-bold font-tabular">{kpi.value}</p>
-              </motion.div>
+              {
+                label: 'Per-month uplift',
+                value: hasOnOff ? `${incrementalPositive ? '+' : ''}${fmt(summary.incremental_spend)}` : '—',
+                accent: incrementalPositive,
+              },
+              { label: 'New customers', value: summary.new_users.toLocaleString(), accent: false },
+              { label: 'Avg. transaction value', value: fmt(avgSpend), accent: false },
+              { label: 'Unique customers', value: summary.unique_users.toLocaleString(), accent: false },
+            ].map((kpi) => (
+              <StaggerItem key={kpi.label}>
+                <div className="bg-white/[0.06] rounded-xl px-4 py-3.5 border border-white/[0.08]">
+                  <p className="text-white/35 text-[11px] font-semibold mb-1.5 tracking-caps uppercase">{kpi.label}</p>
+                  <p className={`text-lg font-semibold font-tabular tracking-tight ${kpi.accent ? 'text-coral-light' : 'text-white'}`}>{kpi.value}</p>
+                </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         </div>
       </div>
 
-      {/* Report body */}
-      <div className="max-w-3xl mx-auto px-8 py-12 space-y-12">
+      {/* ── Report body ───────────────────────────────────────────── */}
+      <div className="max-w-3xl mx-auto px-8 py-10 space-y-12">
 
-        {/* Executive summary */}
-        <section>
-          <SectionHeader title="Executive Summary" />
-          <div className="bg-surface-muted/50 rounded-2xl border border-surface-border p-6 space-y-3">
-            {summary.insights.map((insight, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + i * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="flex gap-3 text-sm text-ink-secondary"
-              >
-                <span className="text-coral mt-0.5 shrink-0">→</span>
-                <p>{insight}</p>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* Commercial model */}
-        <section>
-          <SectionHeader title="Commercial Model" sub="Revenue methodology applied in this period" />
-          <div className="bg-white rounded-2xl border border-surface-border p-6">
-            {commercials.map((model, i) => (
-              <div key={i} className="text-sm">
-                <p className="font-semibold text-ink mb-1">{describeModel(model)}</p>
-                <p className="text-ink-tertiary text-xs">Effective from {model.effective_from}{model.effective_to ? ` to ${model.effective_to}` : ''}</p>
+        {/* 1. Executive summary */}
+        {summary.insights.length > 0 && (
+          <FadeIn>
+            <section>
+              <SectionHeader title="Executive summary" />
+              <div className="space-y-3">
+                {summary.insights.map((insight, i) => (
+                  <div key={i} className="flex gap-3">
+                    <span className="w-1.5 h-1.5 rounded-full bg-coral mt-[0.5em] shrink-0" />
+                    <p className="text-[15px] text-ink-500 leading-relaxed">{insight}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
+          </FadeIn>
+        )}
 
-        {/* Transaction summary */}
-        <section>
-          <SectionHeader title="Transaction Summary" />
-          <div className="bg-white rounded-2xl border border-surface-border p-6">
-            <DataRow label="Total transactions" value={summary.total_transactions.toLocaleString()} />
-            <DataRow label="Settled transactions" value={summary.settled_transactions.toLocaleString()} />
-            <DataRow label="Total spend (GBP)" value={fmt(summary.total_spend_gbp)} />
-            <DataRow label="Average transaction value" value={fmt(avgSpend)} />
-            <DataRow label="Unique customers" value={summary.unique_users.toLocaleString()} />
-            <DataRow label="New customers" value={summary.new_users.toLocaleString()} />
-          </div>
-        </section>
-
-        {/* Revenue breakdown */}
-        <section>
-          <SectionHeader title="Revenue Breakdown" />
-          <div className="bg-white rounded-2xl border border-surface-border p-6">
-            <DataRow label="Total revenue" value={fmt(summary.total_revenue)} highlight />
-            <DataRow label="Revenue from new customers" value={fmt(summary.new_revenue)} highlight />
-            <DataRow label="Revenue from repeat customers" value={fmt(summary.repeat_revenue)} highlight />
-            {summary.boost_revenue > 0 && (
-              <DataRow label="Revenue from boost periods" value={fmt(summary.boost_revenue)} highlight />
-            )}
-            <DataRow label="Effective revenue margin" value={`${revenueMargin.toFixed(2)}%`} />
-          </div>
-        </section>
-
-        {/* New vs repeat */}
-        <section>
-          <SectionHeader title="New vs Returning Customers" />
-          <div className="bg-white rounded-2xl border border-surface-border p-6">
-            <div className="grid grid-cols-2 gap-6 mb-6">
-              <div className="bg-coral-subtle rounded-xl p-4 border border-coral/[0.06]">
-                <p className="text-[10px] text-ink-tertiary uppercase tracking-[0.08em] mb-2">New</p>
-                <p className="text-2xl font-bold text-ink font-tabular">{summary.new_transactions}</p>
-                <p className="text-xs text-ink-secondary mt-0.5">transactions · {fmt(summary.new_spend_gbp)} spend</p>
-                <p className="text-xs text-accent-green font-semibold mt-0.5">{fmt(summary.new_revenue)} revenue</p>
-              </div>
-              <div className="bg-surface-muted rounded-xl p-4 border border-surface-border">
-                <p className="text-[10px] text-ink-tertiary uppercase tracking-[0.08em] mb-2">Repeat</p>
-                <p className="text-2xl font-bold text-ink font-tabular">{summary.repeat_transactions}</p>
-                <p className="text-xs text-ink-secondary mt-0.5">transactions · {fmt(summary.repeat_spend_gbp)} spend</p>
-                <p className="text-xs text-accent-green font-semibold mt-0.5">{fmt(summary.repeat_revenue)} revenue</p>
-              </div>
-            </div>
-            <NewVsExistingChart data={summary.monthly_breakdown} metric="transactions" />
-          </div>
-        </section>
-
-        {/* On/Off Yonder */}
-        {(summary.on_yonder_spend > 0 || summary.off_yonder_spend > 0) && (
-          <section>
-            <SectionHeader title="On vs Off Yonder — Incremental Spend" sub="Comparing spend during active Yonder periods vs inactive periods" />
-            <div className="bg-white rounded-2xl border border-surface-border p-6">
-              <DataRow label="Spend during active (on Yonder) months" value={fmt(summary.on_yonder_spend)} />
-              <DataRow label="Spend during inactive (off Yonder) months" value={fmt(summary.off_yonder_spend)} />
-              <DataRow
-                label="Incremental uplift"
-                value={`${summary.incremental_spend >= 0 ? '+' : ''}${fmt(summary.incremental_spend)}`}
-                highlight={summary.incremental_spend > 0}
+        {/* 2. Value delivered */}
+        {hasOnOff && (
+          <FadeIn>
+            <section>
+              <SectionHeader
+                title="Value delivered through Yonder"
+                sub="Spend during active Yonder periods compared to inactive months"
               />
-              <div className="mt-5">
-                <SpendTrendChart data={summary.monthly_breakdown} metric="spend" showOnOffBands />
-                <p className="text-[11px] text-ink-tertiary mt-3 text-center">
-                  Green markers indicate active on-Yonder months
+
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="rounded-2xl border border-coral-100 bg-coral-50/60 px-5 py-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-40" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-coral" />
+                    </span>
+                    <p className="text-[11px] font-semibold text-coral uppercase tracking-caps">On Yonder</p>
+                  </div>
+                  <p className="text-xl font-semibold text-ink-900 font-tabular">{fmt(summary.avg_monthly_on_spend)}</p>
+                  <p className="text-xs text-ink-400 mt-1">avg. monthly spend · {activeMonthCount} {activeMonthCount === 1 ? 'month' : 'months'}</p>
+                </div>
+                <div className="rounded-2xl border border-sand-200 bg-sand-100 px-5 py-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 rounded-full bg-ink-200 shrink-0" />
+                    <p className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps">Off Yonder</p>
+                  </div>
+                  <p className="text-xl font-semibold text-ink-900 font-tabular">{fmt(summary.avg_monthly_off_spend)}</p>
+                  <p className="text-xs text-ink-300 mt-1">
+                    avg. monthly spend · {inactiveMonthCount} {inactiveMonthCount === 1 ? 'month' : 'months'}
+                  </p>
+                </div>
+              </div>
+
+              <div className={`rounded-2xl px-5 py-4 mb-5 flex items-center justify-between gap-4 ${
+                incrementalPositive
+                  ? 'bg-coral-50 border border-coral-100'
+                  : 'bg-sand-100 border border-sand-200'
+              }`}>
+                <div>
+                  <p className="text-[11px] font-semibold text-ink-400 mb-1 uppercase tracking-caps">Per-month spend uplift</p>
+                  <p className={`text-2xl font-semibold tracking-tight ${incrementalPositive ? 'text-coral' : 'text-ink-400'}`}>
+                    {incrementalPositive ? '+' : ''}{fmt(summary.incremental_spend)}
+                  </p>
+                </div>
+                {incrementalPositive && (
+                  <p className="text-xs text-ink-400 leading-relaxed max-w-[200px] text-right">
+                    Avg. monthly spend difference: active vs inactive periods
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-gray-200/60 bg-white px-5 pt-4 pb-3 shadow-card">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-sm bg-coral" />
+                    <span className="text-[11px] text-ink-300">Active</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-sm bg-sand-200" />
+                    <span className="text-[11px] text-ink-300">Inactive</span>
+                  </div>
+                </div>
+                <OnOffComparisonChart data={summary.monthly_breakdown} />
+                <p className="text-[11px] text-ink-300 mt-2">
+                  Monthly settled spend. Coral bars indicate months when {summary.display_name} was active on the Yonder platform.
                 </p>
               </div>
-            </div>
-          </section>
+            </section>
+          </FadeIn>
         )}
 
-        {/* Boost period */}
-        {summary.boost_transactions > 0 && (
+        {/* 3. Customer growth */}
+        <FadeIn>
           <section>
-            <SectionHeader title="Time Boost Performance" sub="Transactions matched to time-boost offer windows" />
-            <div className="bg-white rounded-2xl border border-surface-border p-6">
-              <DataRow label="Boost transactions" value={summary.boost_transactions.toLocaleString()} />
-              <DataRow label="Boost spend" value={fmt(summary.boost_spend_gbp)} />
-              <DataRow label="Boost revenue" value={fmt(summary.boost_revenue)} highlight />
+            <SectionHeader title="Customer growth and loyalty" />
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+              {[
+                { label: 'New customers', value: summary.new_users.toLocaleString() },
+                { label: 'Repeat visit rate', value: `${Math.round(repeatRate)}%` },
+                { label: 'New customer spend', value: fmt(summary.new_spend_gbp) },
+                { label: 'Returning spend', value: fmt(summary.repeat_spend_gbp) },
+              ].map(stat => (
+                <div key={stat.label} className="rounded-2xl border border-gray-200/60 bg-white px-4 py-3 shadow-card">
+                  <p className="text-[11px] font-semibold text-ink-300 mb-1 uppercase tracking-caps">{stat.label}</p>
+                  <p className="text-lg font-semibold text-ink-900 font-tabular">{stat.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-2xl border border-gray-200/60 bg-white px-5 pt-4 pb-3 shadow-card">
+              <p className="text-xs font-semibold text-ink-600 mb-3">New vs returning customer spend by month</p>
+              <NewVsExistingChart data={summary.monthly_breakdown} metric="spend" />
+              <p className="text-[11px] text-ink-300 mt-2">
+                New customers are Yonder members transacting with {summary.display_name} for the first time within the reporting window.
+              </p>
             </div>
           </section>
-        )}
+        </FadeIn>
 
-        {/* Spend trend chart */}
-        <section>
-          <SectionHeader title="Monthly Spend Trend" />
-          <div className="bg-white rounded-2xl border border-surface-border p-6">
-            <SpendTrendChart data={summary.monthly_breakdown} metric="spend" />
+        {/* 4. Spend over time */}
+        <FadeIn>
+          <section>
+            <SectionHeader title="Spend over time" sub="Monthly settled spend from Yonder members" />
+            <div className="rounded-2xl border border-gray-200/60 bg-white px-5 pt-4 pb-3 shadow-card">
+              <SpendTrendChart data={summary.monthly_breakdown} metric="spend" showOnOffBands={hasOnOff} />
+              {hasOnOff && (
+                <p className="text-[11px] text-ink-300 mt-2">
+                  Shaded bands indicate months when {summary.display_name} was active on the Yonder platform.
+                </p>
+              )}
+            </div>
+          </section>
+        </FadeIn>
+
+        {/* 5. Commercial return */}
+        <FadeIn>
+          <section>
+            <SectionHeader title="Commercial return" sub="How platform fees were calculated for this period" />
+
+            <div className="rounded-2xl border border-gray-200/60 bg-white p-5 mb-3 shadow-card">
+              {commercials.map((model, i) => (
+                <div key={i} className={i > 0 ? 'pt-3 mt-3 border-t border-sand-100' : ''}>
+                  <p className="font-semibold text-ink-900 text-sm mb-0.5">{describeModel(model)}</p>
+                  <p className="text-[11px] text-ink-300">
+                    Effective {model.effective_from}{model.effective_to ? ` – ${model.effective_to}` : ' (current)'}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-2xl border border-gray-200/60 bg-white p-5 shadow-card">
+              <DataRow label="Platform fee from new customers" value={fmt(summary.new_revenue)} highlight />
+              <DataRow label="Platform fee from returning customers" value={fmt(summary.repeat_revenue)} highlight />
+              {summary.boost_revenue > 0 && (
+                <DataRow label="Fee from time-boost periods" value={fmt(summary.boost_revenue)} highlight />
+              )}
+              <DataRow label="Total platform fee" value={fmt(summary.total_revenue)} highlight large />
+              <DataRow label="Effective fee rate" value={`${revenueMargin.toFixed(2)}% of settled spend`} />
+            </div>
+          </section>
+        </FadeIn>
+
+        {/* 6. Monthly breakdown */}
+        <FadeIn>
+          <section>
+            <SectionHeader title="Monthly performance breakdown" />
+            <div className="rounded-2xl border border-gray-200/60 bg-white overflow-hidden shadow-card">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-sand-100 bg-sand-50">
+                    <th className="text-left px-5 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Month</th>
+                    {hasOnOff && (
+                      <th className="text-center px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Status</th>
+                    )}
+                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Txns</th>
+                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Spend</th>
+                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Fee</th>
+                    <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">New</th>
+                    <th className="text-right px-5 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Customers</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summary.monthly_breakdown.map((m) => {
+                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+                    const [y, mo] = m.year_month.split('-')
+                    const label = `${months[parseInt(mo) - 1]} ${y}`
+                    const isActive = m.is_on_yonder
+                    return (
+                      <tr
+                        key={m.year_month}
+                        className={`border-t border-sand-100 print:bg-transparent transition-colors ${
+                          isActive ? 'bg-coral-50/30' : 'hover:bg-sand-50'
+                        }`}
+                      >
+                        <td className="px-5 py-2.5 font-semibold text-ink-900">{label}</td>
+                        {hasOnOff && (
+                          <td className="px-4 py-2.5 text-center">
+                            {isActive
+                              ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-coral"><span className="w-1.5 h-1.5 rounded-full bg-coral inline-block" /> Active</span>
+                              : <span className="text-ink-300 text-xs">—</span>
+                            }
+                          </td>
+                        )}
+                        <td className="px-4 py-2.5 text-right text-ink-400 font-tabular">{m.settled_transactions}</td>
+                        <td className="px-4 py-2.5 text-right font-tabular text-ink-900">{fmt(m.total_spend_gbp)}</td>
+                        <td className="px-4 py-2.5 text-right font-tabular text-coral font-semibold">{fmt(m.total_revenue)}</td>
+                        <td className="px-4 py-2.5 text-right text-ink-400 font-tabular">{m.new_transactions}</td>
+                        <td className="px-5 py-2.5 text-right text-ink-400 font-tabular">{m.unique_users}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </FadeIn>
+
+        {/* 7. Methodology */}
+        <FadeIn>
+          <section className="border-t border-sand-200 pt-8">
+            <h3 className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps mb-3">Methodology &amp; notes</h3>
+            <div className="space-y-1.5 text-[11px] text-ink-300 leading-relaxed">
+              <p>· Only settled transactions are included in revenue calculations.</p>
+              <p>· &quot;New customer&quot; is defined as a user whose first settled transaction with this partner falls on or after the baseline date.</p>
+              <p>· &quot;On Yonder&quot; periods cover full calendar months as defined in the partner active period configuration.</p>
+              <p>· Incremental spend is the per-month normalised difference between avg. on-Yonder and avg. off-Yonder spend. No seasonality adjustment applied.</p>
+              <p>· FX transactions are converted to GBP using the fx_rate field. Where absent, charged_amount (GBP) is used as fallback.</p>
+              {summary.boost_transactions > 0 && (
+                <p>· Boost revenue applies to transactions matched to time-based offer windows.</p>
+              )}
+            </div>
+          </section>
+        </FadeIn>
+
+        <div className="flex items-center justify-between text-[11px] text-ink-300 pt-2 pb-4">
+          <div className="flex items-center gap-3">
+            <YonderLogo variant="dark" size="sm" showWordmark={false} />
+            <span>© Yonder · Confidential · {generatedAt}</span>
           </div>
-        </section>
-
-        {/* Monthly detail table */}
-        <section>
-          <SectionHeader title="Monthly Detail" />
-          <div className="bg-white rounded-2xl border border-surface-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-surface-muted/50">
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Month</th>
-                  <th className="text-center px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">On Yonder</th>
-                  <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Txns</th>
-                  <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Spend</th>
-                  <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">Revenue</th>
-                  <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">New</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summary.monthly_breakdown.map(m => {
-                  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-                  const [y, mo] = m.year_month.split('-')
-                  const label = `${months[parseInt(mo) - 1]} ${y}`
-                  return (
-                    <tr key={m.year_month} className="border-t border-surface-border/60 hover:bg-surface-hover transition-colors duration-150 print:hover:bg-transparent">
-                      <td className="px-5 py-2.5 font-medium text-ink">{label}</td>
-                      <td className="px-4 py-2.5 text-center text-xs">
-                        {m.is_on_yonder
-                          ? <span className="text-accent-green font-semibold">Yes</span>
-                          : <span className="text-ink-tertiary">—</span>
-                        }
-                      </td>
-                      <td className="px-4 py-2.5 text-right text-ink-secondary font-tabular">{m.settled_transactions}</td>
-                      <td className="px-4 py-2.5 text-right font-tabular text-ink font-medium">{fmt(m.total_spend_gbp)}</td>
-                      <td className="px-4 py-2.5 text-right font-tabular text-accent-green font-semibold">{fmt(m.total_revenue)}</td>
-                      <td className="px-5 py-2.5 text-right text-ink-secondary font-tabular">{m.new_transactions}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* Methodology footnotes */}
-        <section className="border-t border-surface-border pt-8">
-          <h3 className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-tertiary mb-3">Methodology & Notes</h3>
-          <div className="space-y-1.5 text-[11px] text-ink-tertiary leading-relaxed">
-            <p>· Only settled transactions are included in revenue calculations. Declined and pending transactions are excluded.</p>
-            <p>· "New customer" is defined as a user whose first settled transaction with this partner falls on or after the baseline date for this partner.</p>
-            <p>· "On Yonder" periods are defined in the partner active period configuration and cover full calendar months.</p>
-            <p>· Incremental spend is the raw difference between on-Yonder and off-Yonder settled spend. No seasonality or volume normalisation has been applied.</p>
-            <p>· FX transactions are converted to GBP using the fx_rate field in the transaction record (foreign units per GBP). Where fx_rate is absent, charged_amount (GBP) is used as fallback.</p>
-            <p>· Boost revenue applies to transactions matched to time-based offer windows in the experience_visited dataset.</p>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between text-[11px] text-ink-tertiary pt-4 pb-2">
-          <span>© Yonder · Confidential · {generatedAt}</span>
-          <span className="text-ink-tertiary/60">Auto-generated report</span>
+          <span className="text-ink-200">Auto-generated report</span>
         </div>
-
       </div>
     </div>
   )

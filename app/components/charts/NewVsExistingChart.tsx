@@ -11,21 +11,11 @@ import {
   Legend,
 } from 'recharts'
 import type { PartnerMonthlyMetrics } from '@/lib/types'
+import { formatMonth, formatGbp, ChartTooltip, CHART_COLORS, AXIS_PROPS } from './shared'
 
 interface NewVsExistingChartProps {
   data: PartnerMonthlyMetrics[]
   metric?: 'spend' | 'transactions'
-}
-
-function formatMonth(ym: string): string {
-  const [y, m] = ym.split('-')
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-  return `${months[parseInt(m) - 1]} '${y.slice(2)}`
-}
-
-function formatGbp(v: number) {
-  if (v >= 1000) return `£${(v / 1000).toFixed(1)}k`
-  return `£${v.toFixed(0)}`
 }
 
 export function NewVsExistingChart({ data, metric = 'spend' }: NewVsExistingChartProps) {
@@ -37,45 +27,44 @@ export function NewVsExistingChart({ data, metric = 'spend' }: NewVsExistingChar
 
   const fmt = metric === 'spend' ? formatGbp : (v: number) => v.toString()
 
+  const NvETooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null
+    return (
+      <ChartTooltip
+        active={active}
+        label={formatMonth(label)}
+        rows={payload.map((p: any) => ({
+          label: p.name,
+          value: fmt(Number(p.value)),
+          color: p.color,
+        }))}
+      />
+    )
+  }
+
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
-        <CartesianGrid strokeDasharray="3 3" stroke="#eaecf4" strokeOpacity={0.7} vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.gridLine} strokeOpacity={0.7} vertical={false} />
         <XAxis
           dataKey="month"
           tickFormatter={formatMonth}
-          tick={{ fill: '#8a91a8', fontSize: 11 }}
-          axisLine={false}
-          tickLine={false}
+          {...AXIS_PROPS}
           interval="preserveStartEnd"
         />
         <YAxis
           tickFormatter={fmt}
-          tick={{ fill: '#8a91a8', fontSize: 11 }}
-          axisLine={false}
-          tickLine={false}
+          {...AXIS_PROPS}
           width={52}
         />
-        <Tooltip
-          formatter={(value, name) => [fmt(Number(value)), String(name)]}
-          labelFormatter={(label) => formatMonth(String(label))}
-          contentStyle={{
-            borderRadius: '12px',
-            border: '1px solid #eaecf4',
-            fontSize: '12px',
-            backdropFilter: 'blur(8px)',
-            backgroundColor: 'rgba(255,255,255,0.95)',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-          }}
-          itemStyle={{ color: '#4a5068', fontSize: '12px' }}
-        />
+        <Tooltip content={<NvETooltip />} />
         <Legend
           wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
           iconType="circle"
           iconSize={7}
         />
-        <Bar dataKey="New" stackId="a" fill="#F04E37" radius={[0, 0, 0, 0]} animationDuration={1000} animationEasing="ease-out" />
-        <Bar dataKey="Repeat" stackId="a" fill="#C5CBDA" radius={[6, 6, 0, 0]} animationDuration={1000} animationEasing="ease-out" />
+        <Bar dataKey="New" stackId="a" fill={CHART_COLORS.coral} radius={[0, 0, 0, 0]} animationDuration={1000} animationEasing="ease-out" />
+        <Bar dataKey="Repeat" stackId="a" fill={CHART_COLORS.muted} radius={[6, 6, 0, 0]} animationDuration={1000} animationEasing="ease-out" />
       </BarChart>
     </ResponsiveContainer>
   )

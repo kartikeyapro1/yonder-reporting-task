@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
-import { Header } from '@/components/layout/Header'
 import { PartnerFacingClient } from './PartnerFacingClient'
 import { getPartnerReportSummary } from '@/lib/reporting/partner-report-summary'
-import { PARTNER_CONFIGS } from '@/lib/config/partner-commercials'
+import { getPartnerByToken } from '@/lib/config/partner-commercials'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,21 +10,21 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const config = getPartnerByToken(id)
+  return { title: config ? `${config.display_name} — Partnership` : 'Partner Report' }
+}
+
 export default async function PartnerFacingPage({ params }: Props) {
   const { id } = await params
 
-  const config = PARTNER_CONFIGS.find(
-    c => c.partner_name.toLowerCase().replace(/\s+/g, '-') === id
-  )
+  // Partner-facing routes use opaque tokens, not predictable slugs
+  const config = getPartnerByToken(id)
   if (!config) notFound()
 
   const summary = getPartnerReportSummary(config.partner_name)
   if (!summary) notFound()
 
-  return (
-    <div className="min-h-screen bg-white">
-      <Header section="partner" partnerName={summary.display_name} />
-      <PartnerFacingClient summary={summary} />
-    </div>
-  )
+  return <PartnerFacingClient summary={summary} />
 }

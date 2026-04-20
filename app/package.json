@@ -6,10 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf .next"
   },
   "dependencies": {
-    "framer-motion": "^11.0.0",
     "motion": "^12.38.0",
     "next": "^15.0.0",
     "papaparse": "^5.4.1",
