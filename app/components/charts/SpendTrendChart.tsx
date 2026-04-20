@@ -18,9 +18,11 @@ interface SpendTrendChartProps {
   data: PartnerMonthlyMetrics[]
   metric?: 'spend' | 'revenue' | 'transactions'
   showOnOffBands?: boolean
+  onMonthClick?: (month: string) => void
+  selectedMonth?: string
 }
 
-export function SpendTrendChart({ data, metric = 'spend', showOnOffBands }: SpendTrendChartProps) {
+export function SpendTrendChart({ data, metric = 'spend', showOnOffBands, onMonthClick, selectedMonth }: SpendTrendChartProps) {
   const gradId = useId().replace(/:/g, '_')
 
   const chartData = data.map(d => ({
@@ -74,7 +76,12 @@ export function SpendTrendChart({ data, metric = 'spend', showOnOffBands }: Spen
 
   return (
     <ResponsiveContainer width="100%" height={240}>
-      <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+      <AreaChart
+        data={chartData}
+        margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+        onClick={onMonthClick ? (e: any) => { if (e?.activeLabel) onMonthClick(e.activeLabel) } : undefined}
+        style={onMonthClick ? { cursor: 'pointer' } : undefined}
+      >
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={CHART_COLORS.coral} stopOpacity={0.18} />

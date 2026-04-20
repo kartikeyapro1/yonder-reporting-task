@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowUp, ArrowDown, ChevronsUpDown,
   TrendingUp, TrendingDown,
   ChevronLeft, ChevronRight,
+  Download,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import BlurText from '@/components/ui/BlurText'
@@ -56,6 +57,19 @@ export function InternalDashboardClient({ rows, totals }: Props) {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [page, setPage] = useState(1)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // '/' keyboard shortcut → focus search
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   const handleSearch = useCallback((value: string) => {
     setSearch(value)
@@ -65,6 +79,29 @@ export function InternalDashboardClient({ rows, totals }: Props) {
       setPage(1)
     }, 200)
   }, [])
+
+  function exportCsv() {
+    const headers = ['Partner', 'Category', 'Card Spend (£)', 'Commission (£)', 'Visits', 'Members', 'Last Active', 'Status']
+    const escCsv = (v: string) => `"${v.replace(/"/g, '""')}"`
+    const rows = filtered.map(r => [
+      escCsv(r.display_name),
+      escCsv(r.category),
+      r.total_spend_gbp.toFixed(2),
+      r.total_revenue.toFixed(2),
+      r.total_transactions.toString(),
+      r.unique_users.toString(),
+      r.last_active_month,
+      r.is_currently_active ? 'Active' : 'Inactive',
+    ].join(','))
+    const csv = [headers.join(','), ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `yonder-partners-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -249,13 +286,23 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                   {filtered.length}
                 </span>
               </div>
-              <div className="relative">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={exportCsv}
+                  title="Export filtered table as CSV"
+                  className="p-2 rounded-xl border border-gray-200 bg-white text-ink-400 hover:text-ink-700 hover:bg-sand-50
+                    hover:border-coral/20 transition-all duration-300"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </button>
+                <div className="relative">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
+                  ref={searchRef}
                   type="text"
-                  placeholder="Search…"
+                  placeholder="Search…  /"
                   value={search}
                   onChange={e => handleSearch(e.target.value)}
                   aria-label="Search partners"
@@ -263,6 +310,7 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                     outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/30
                     transition-all duration-300 placeholder:text-gray-400"
                 />
+                </div>
               </div>
             </div>
 

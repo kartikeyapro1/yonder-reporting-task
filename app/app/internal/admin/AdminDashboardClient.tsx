@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { BarChart2, ArrowRight, Link2, Check, X } from 'lucide-react'
+import { BarChart2, ArrowRight, Link2, Check, X, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Header } from '@/components/layout/Header'
 import { FadeIn, StaggerList, StaggerItem } from '@/components/motion'
@@ -75,6 +75,24 @@ export function AdminDashboardClient({ partners: initialPartners }: Props) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
   const [magicLinkState, setMagicLinkState] = useState<Record<string, 'idle' | 'loading' | 'copied'>>({})
+  const [revalidating, setRevalidating] = useState(false)
+
+  async function revalidateAll() {
+    setRevalidating(true)
+    try {
+      const res = await fetch('/api/admin/revalidate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+      if (res.ok) {
+        const { revalidated } = await res.json()
+        toast.success(`Cache cleared for ${revalidated.length} partners`)
+      } else {
+        toast.error('Failed to revalidate cache')
+      }
+    } catch {
+      toast.error('Failed to revalidate cache')
+    } finally {
+      setRevalidating(false)
+    }
+  }
 
   // ── Form state ──
   const [formName, setFormName] = useState('')
@@ -178,7 +196,10 @@ export function AdminDashboardClient({ partners: initialPartners }: Props) {
         if (idx >= 0) return [...prev.slice(0, idx), saved, ...prev.slice(idx + 1)]
         return [...prev, saved]
       })
+      toast.success(editingPartner ? `${saved.display_name} updated` : `${saved.display_name} added`)
       setShowForm(false)
+    } else {
+      toast.error('Failed to save partner')
     }
     setSaving(false)
   }
@@ -186,8 +207,12 @@ export function AdminDashboardClient({ partners: initialPartners }: Props) {
   async function deletePartnerHandler(name: string) {
     const res = await fetch(`/api/admin/partners/${encodeURIComponent(name)}`, { method: 'DELETE' })
     if (res.ok) {
+      const display = partners.find(p => p.partner_name === name)?.display_name ?? name
       setPartners(prev => prev.filter(p => p.partner_name !== name))
       setDeleteConfirm(null)
+      toast.success(`${display} removed`)
+    } else {
+      toast.error('Failed to delete partner')
     }
   }
 
@@ -211,6 +236,7 @@ export function AdminDashboardClient({ partners: initialPartners }: Props) {
     setSaving(false)
     setEditingPeriods(null)
     setPeriodPartner(null)
+    toast.success('Active periods updated')
   }
 
   function addPeriod() {
@@ -286,9 +312,20 @@ export function AdminDashboardClient({ partners: initialPartners }: Props) {
               </h1>
               <p className="text-sm text-ink-400 mt-1">{partners.length} partners configured</p>
             </div>
-            <button onClick={openNewPartner} className={btnPrimary}>
-              + Add Partner
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={revalidateAll}
+                disabled={revalidating}
+                title="Clear cached partner report pages"
+                className={`${btnSecondary} flex items-center gap-1.5 disabled:opacity-50`}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${revalidating ? 'animate-spin' : ''}`} />
+                Revalidate cache
+              </button>
+              <button onClick={openNewPartner} className={btnPrimary}>
+                + Add Partner
+              </button>
+            </div>
           </div>
         </FadeIn>
 

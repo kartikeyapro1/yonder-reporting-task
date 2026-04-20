@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
-import { Download, Link2, Check, ArrowRight, ExternalLink } from 'lucide-react'
+import { Download, Link2, Check, ArrowRight, ExternalLink, CalendarRange, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { KpiCard } from '@/components/ui/KpiCard'
 import { Card } from '@/components/ui/Card'
@@ -31,11 +31,40 @@ function pct(a: number, b: number) {
   return `${((a / b) * 100).toFixed(0)}%`
 }
 
+function fmtMonthLabel(ym: string) {
+  const [y, m] = ym.split('-')
+  const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  return `${names[parseInt(m) - 1]} ${y}`
+}
+
 type ChartTab = 'spend' | 'commission' | 'on-off' | 'new-repeat'
 
 export function InternalPartnerDetailClient({ summary }: Props) {
   const [chartTab, setChartTab] = useState<ChartTab>('spend')
   const [linkState, setLinkState] = useState<'idle' | 'loading' | 'copied'>('idle')
+
+  // Date range filter
+  const months = summary.monthly_breakdown.map(m => m.year_month)
+  const [fromMonth, setFromMonth] = useState(months[0] ?? '')
+  const [toMonth, setToMonth] = useState(months[months.length - 1] ?? '')
+  const isFiltered = fromMonth !== months[0] || toMonth !== months[months.length - 1]
+
+  const filteredMonthly = useMemo(() => {
+    return summary.monthly_breakdown.filter(
+      m => m.year_month >= fromMonth && m.year_month <= toMonth
+    )
+  }, [summary.monthly_breakdown, fromMonth, toMonth])
+
+  function resetRange() {
+    setFromMonth(months[0] ?? '')
+    setToMonth(months[months.length - 1] ?? '')
+  }
+
+  // Derived totals from filtered range
+  const rangeSpend     = filteredMonthly.reduce((s, m) => s + m.total_spend_gbp, 0)
+  const rangeRevenue   = filteredMonthly.reduce((s, m) => s + m.total_revenue, 0)
+  const rangeTx        = filteredMonthly.reduce((s, m) => s + m.settled_transactions, 0)
+  const rangeUsers     = filteredMonthly.reduce((s, m) => s + m.unique_users, 0)
 
   async function handleGenerateLink() {
     setLinkState('loading')
@@ -61,8 +90,19 @@ export function InternalPartnerDetailClient({ summary }: Props) {
   const hasOnOff = summary.on_months_count > 0 && summary.off_months_count > 0
   const incrementalPositive = summary.incremental_spend > 0
   const newPct = pct(summary.new_transactions, summary.total_transactions)
-
   const slug = summary.partner_name.toLowerCase().replace(/\s+/g, '-')
+
+  // Chart drill-down — clicking a data point scrolls to + highlights that month in the table
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
+  const tableRef = useRef<HTMLDivElement>(null)
+
+  function handleMonthClick(month: string) {
+    setSelectedMonth(prev => prev === month ? null : month)
+    setTimeout(() => {
+      tableRef.current?.querySelector(`[data-month="${month}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 50)
+  }
 
   return (
     <main className="max-w-screen-xl mx-auto px-6 py-8">
@@ -123,12 +163,57 @@ export function InternalPartnerDetailClient({ summary }: Props) {
         </div>
       </FadeIn>
 
+      {/* ── Date range filter ─────────────────────────────── */}
+      {months.length > 1 && (
+        <FadeIn delay={0.15}>
+          <div className="flex items-center gap-3 mb-6 px-0.5">
+            <CalendarRange className="w-3.5 h-3.5 text-ink-300 shrink-0" />
+            <div className="flex items-center gap-2">
+              <select
+                value={fromMonth}
+                onChange={e => { setFromMonth(e.target.value); if (e.target.value > toMonth) setToMonth(e.target.value) }}
+                className="text-xs font-medium text-ink-600 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5
+                  outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/30 transition-all cursor-pointer"
+              >
+                {months.map(m => (
+                  <option key={m} value={m}>{fmtMonthLabel(m)}</option>
+                ))}
+              </select>
+              <span className="text-xs text-ink-300">–</span>
+              <select
+                value={toMonth}
+                onChange={e => { setToMonth(e.target.value); if (e.target.value < fromMonth) setFromMonth(e.target.value) }}
+                className="text-xs font-medium text-ink-600 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5
+                  outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/30 transition-all cursor-pointer"
+              >
+                {months.map(m => (
+                  <option key={m} value={m}>{fmtMonthLabel(m)}</option>
+                ))}
+              </select>
+            </div>
+            {isFiltered && (
+              <button
+                onClick={resetRange}
+                className="flex items-center gap-1 text-xs text-ink-300 hover:text-coral transition-colors duration-200"
+              >
+                <RotateCcw className="w-3 h-3" /> Reset
+              </button>
+            )}
+            {isFiltered && (
+              <span className="text-[11px] text-coral font-medium bg-coral-50 px-2 py-0.5 rounded-full border border-coral-100">
+                {filteredMonthly.length} of {months.length} months
+              </span>
+            )}
+          </div>
+        </FadeIn>
+      )}
+
       {/* KPI strip */}
       <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <StaggerItem><KpiCard label="Member spend" value={fmt(summary.total_spend_gbp)} /></StaggerItem>
-        <StaggerItem><KpiCard label="Commission" value={fmt(summary.total_revenue)} /></StaggerItem>
-        <StaggerItem><KpiCard label="Visits" value={summary.total_transactions.toLocaleString()} /></StaggerItem>
-        <StaggerItem><KpiCard label="Members" value={summary.unique_users.toLocaleString()} /></StaggerItem>
+        <StaggerItem><KpiCard label="Member spend" value={fmt(isFiltered ? rangeSpend : summary.total_spend_gbp)} sub={isFiltered ? 'selected range' : undefined} /></StaggerItem>
+        <StaggerItem><KpiCard label="Commission" value={fmt(isFiltered ? rangeRevenue : summary.total_revenue)} sub={isFiltered ? 'selected range' : undefined} /></StaggerItem>
+        <StaggerItem><KpiCard label="Visits" value={(isFiltered ? rangeTx : summary.total_transactions).toLocaleString()} sub={isFiltered ? 'selected range' : undefined} /></StaggerItem>
+        <StaggerItem><KpiCard label="Members" value={(isFiltered ? rangeUsers : summary.unique_users).toLocaleString()} sub={isFiltered ? 'selected range' : undefined} /></StaggerItem>
       </StaggerList>
 
       {/* Secondary KPI strip */}
@@ -228,10 +313,17 @@ export function InternalPartnerDetailClient({ summary }: Props) {
                   ))}
                 </div>
               </div>
-              {chartTab === 'spend' && <SpendTrendChart data={summary.monthly_breakdown} metric="spend" showOnOffBands />}
-              {chartTab === 'commission' && <SpendTrendChart data={summary.monthly_breakdown} metric="revenue" />}
-              {chartTab === 'on-off' && <OnOffComparisonChart data={summary.monthly_breakdown} />}
-              {chartTab === 'new-repeat' && <NewVsExistingChart data={summary.monthly_breakdown} metric="spend" />}
+              {chartTab === 'spend' && <SpendTrendChart data={filteredMonthly} metric="spend" showOnOffBands onMonthClick={handleMonthClick} selectedMonth={selectedMonth ?? undefined} />}
+              {chartTab === 'commission' && <SpendTrendChart data={filteredMonthly} metric="revenue" onMonthClick={handleMonthClick} selectedMonth={selectedMonth ?? undefined} />}
+              {chartTab === 'on-off' && <OnOffComparisonChart data={filteredMonthly} />}
+              {chartTab === 'new-repeat' && <NewVsExistingChart data={filteredMonthly} metric="spend" onMonthClick={handleMonthClick} selectedMonth={selectedMonth ?? undefined} />}
+              {selectedMonth && (
+                <p className="text-[11px] text-ink-300 mt-2 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-coral inline-block" />
+                  {fmtMonthLabel(selectedMonth)} highlighted in table
+                  <button onClick={() => setSelectedMonth(null)} className="text-ink-300 hover:text-coral transition-colors ml-1">\u00d7 Clear</button>
+                </p>
+              )}
             </Card>
           </div>
 
@@ -302,7 +394,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
 
       {/* Monthly breakdown table */}
       <FadeIn delay={0.5}>
-        <Card className="overflow-hidden mb-12">
+        <div ref={tableRef} className="overflow-hidden mb-12 rounded-2xl shadow-card bg-white border border-gray-100/80">
           <div className="px-6 py-4 border-b border-gray-100">
             <h3 className="text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Monthly breakdown</h3>
           </div>
@@ -321,14 +413,21 @@ export function InternalPartnerDetailClient({ summary }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {summary.monthly_breakdown.map((m) => {
+                {filteredMonthly.map((m) => {
                   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
                   const [y, mo] = m.year_month.split('-')
                   const label = `${months[parseInt(mo) - 1]} ${y}`
                   return (
-                    <tr key={m.year_month} className={`border-t border-gray-100/80 hover:bg-sand-50/60 transition-colors duration-200 ${
-                      m.is_on_yonder && hasOnOff ? 'border-l-[3px] border-l-coral' : ''
-                    }`}>
+                    <tr
+                      key={m.year_month}
+                      data-month={m.year_month}
+                      className={`border-t border-gray-100/80 transition-colors duration-200 ${
+                        selectedMonth === m.year_month
+                          ? 'bg-coral-50/70 ring-1 ring-inset ring-coral/20'
+                          : 'hover:bg-sand-50/60'
+                      } ${
+                        m.is_on_yonder && hasOnOff ? 'border-l-[3px] border-l-coral' : ''
+                      }`}>
                       <td className="px-6 py-2.5 font-medium text-ink-800">{label}</td>
                       {hasOnOff && (
                       <td className="px-4 py-2.5 text-center">
@@ -347,7 +446,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
               </tbody>
             </table>
           </div>
-        </Card>
+        </div>
       </FadeIn>
     </main>
   )

@@ -16,9 +16,11 @@ import { formatMonth, formatGbp, ChartTooltip, CHART_COLORS, AXIS_PROPS } from '
 interface NewVsExistingChartProps {
   data: PartnerMonthlyMetrics[]
   metric?: 'spend' | 'transactions'
+  onMonthClick?: (month: string) => void
+  selectedMonth?: string
 }
 
-export function NewVsExistingChart({ data, metric = 'spend' }: NewVsExistingChartProps) {
+export function NewVsExistingChart({ data, metric = 'spend', onMonthClick }: NewVsExistingChartProps) {
   const chartData = data.map(d => ({
     month: d.year_month,
     New: metric === 'spend' ? d.new_spend_gbp : d.new_transactions,
@@ -44,7 +46,13 @@ export function NewVsExistingChart({ data, metric = 'spend' }: NewVsExistingChar
 
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="30%">
+      <BarChart
+        data={chartData}
+        margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
+        barCategoryGap="30%"
+        onClick={onMonthClick ? (e: any) => { if (e?.activeLabel) onMonthClick(e.activeLabel) } : undefined}
+        style={onMonthClick ? { cursor: 'pointer' } : undefined}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.gridLine} strokeOpacity={0.7} vertical={false} />
         <XAxis
           dataKey="month"
