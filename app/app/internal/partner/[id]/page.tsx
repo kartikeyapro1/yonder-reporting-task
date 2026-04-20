@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import { Header } from '@/components/layout/Header'
 import { InternalPartnerDetailClient } from './InternalPartnerDetailClient'
 import { getPartnerReportSummary } from '@/lib/reporting/partner-report-summary'
@@ -17,14 +18,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: config ? config.display_name : 'Partner Detail' }
 }
 
+function makeCachedSummary(partnerName: string) {
+  return unstable_cache(
+    async () => getPartnerReportSummary(partnerName),
+    [`partner-summary-${partnerName}`],
+    { revalidate: 3600, tags: ['partner-data', `partner-${partnerName}`] }
+  )()
+}
+
 export default async function InternalPartnerPage({ params }: Props) {
   const { id } = await params
 
-  // Internal routes use readable slugs
   const config = getPartnerBySlug(id)
   if (!config) notFound()
 
-  const summary = getPartnerReportSummary(config.partner_name)
+  const summary = await makeCachedSummary(config.partner_name)
   if (!summary) notFound()
 
   return (

@@ -78,10 +78,30 @@ export function InternalDashboardClient({ rows, totals }: Props) {
     .slice(0, 4)
 
   const stats = [
-    { label: 'Member spend', value: totals.totalSpend, prefix: '£' },
-    { label: 'Yonder fee earned', value: totals.totalRevenue, prefix: '£' },
-    { label: 'Settled transactions', value: totals.totalTx, prefix: '' },
-    { label: 'Yonder members', value: totals.totalUsers, prefix: '' },
+    {
+      label: 'Card spend',
+      title: 'Total GBP spent at all partners using Yonder cards. Settled transactions only.',
+      value: totals.totalSpend,
+      prefix: '£',
+    },
+    {
+      label: 'Commission',
+      title: "Yonder's total commission earned from partners, based on agreed CPA or % of spend models.",
+      value: totals.totalRevenue,
+      prefix: '£',
+    },
+    {
+      label: 'Visits',
+      title: 'Total number of settled card transactions across all partners.',
+      value: totals.totalTx,
+      prefix: '',
+    },
+    {
+      label: 'Members',
+      title: 'Distinct Yonder cardholders who made at least one settled transaction.',
+      value: totals.totalUsers,
+      prefix: '',
+    },
   ]
 
   return (
@@ -108,7 +128,10 @@ export function InternalDashboardClient({ rows, totals }: Props) {
           {stats.map(s => (
             <StaggerItem key={s.label}>
               <div className="rounded-2xl border border-gray-200/80 bg-white px-5 py-5 shadow-card hover:shadow-float transition-shadow duration-400">
-                <p className="text-xs font-medium text-ink-400 uppercase tracking-caps mb-2">{s.label}</p>
+                <p
+                  className="text-xs font-medium text-ink-400 uppercase tracking-caps mb-2 cursor-help"
+                  title={s.title}
+                >{s.label}</p>
                 <p className="text-2xl font-semibold text-ink-900 font-tabular">
                   {s.prefix}
                   <CountUp
@@ -155,11 +178,11 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                       </div>
                       <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
                         <div>
-                          <p className="text-[10px] text-ink-300 mb-0.5">Member spend</p>
+                          <p className="text-[10px] text-ink-300 mb-0.5">Card spend</p>
                           <p className="text-xs font-semibold text-ink-800 font-tabular">{fmt(row.total_spend_gbp)}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-ink-300 mb-0.5">Fee earned</p>
+                          <p className="text-[10px] text-ink-300 mb-0.5">Commission</p>
                           <p className="text-xs font-semibold text-positive font-tabular">{fmt(row.total_revenue)}</p>
                         </div>
                         <div>
@@ -214,16 +237,16 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                     Category<SortIcon active={sortKey === 'category'} dir={sortDir} />
                   </th>
                   <th onClick={() => toggleSort('total_spend_gbp')} role="columnheader" aria-sort={sortKey === 'total_spend_gbp' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_spend_gbp')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
-                    Member spend<SortIcon active={sortKey === 'total_spend_gbp'} dir={sortDir} />
+                    Card spend<SortIcon active={sortKey === 'total_spend_gbp'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('total_revenue')} role="columnheader" aria-sort={sortKey === 'total_revenue' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_revenue')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
-                    Yonder fee<SortIcon active={sortKey === 'total_revenue'} dir={sortDir} />
+                  <th onClick={() => toggleSort('total_revenue')} role="columnheader" aria-sort={sortKey === 'total_revenue' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_revenue')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors" title="Yonder's commission from this partner">
+                    Commission<SortIcon active={sortKey === 'total_revenue'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('total_transactions')} role="columnheader" aria-sort={sortKey === 'total_transactions' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_transactions')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
-                    Settled txns<SortIcon active={sortKey === 'total_transactions'} dir={sortDir} />
+                  <th onClick={() => toggleSort('total_transactions')} role="columnheader" aria-sort={sortKey === 'total_transactions' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_transactions')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors" title="Number of settled transactions">
+                    Visits<SortIcon active={sortKey === 'total_transactions'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('unique_users')} role="columnheader" aria-sort={sortKey === 'unique_users' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('unique_users')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
-                    Customers<SortIcon active={sortKey === 'unique_users'} dir={sortDir} />
+                  <th onClick={() => toggleSort('unique_users')} role="columnheader" aria-sort={sortKey === 'unique_users' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('unique_users')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors" title="Unique Yonder cardholders who visited">
+                    Members<SortIcon active={sortKey === 'unique_users'} dir={sortDir} />
                   </th>
                   <th onClick={() => toggleSort('last_active_month')} role="columnheader" aria-sort={sortKey === 'last_active_month' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('last_active_month')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
                     Last active<SortIcon active={sortKey === 'last_active_month'} dir={sortDir} />

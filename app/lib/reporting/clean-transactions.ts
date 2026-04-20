@@ -17,6 +17,7 @@
  * practice = GBP for domestic cards).
  */
 
+import { cache } from 'react'
 import { normaliseMerchantDescription } from '@/lib/config/partner-mappings'
 import { loadRawTransactions } from '@/lib/data/csv-loader'
 import type { CleanTransaction } from '@/lib/types'
@@ -27,14 +28,17 @@ function toGbp(transAmount: number, transCurrency: string, fxRate: number, charg
   return chargedAmount // fallback
 }
 
-let _cache: CleanTransaction[] | null = null
-
-export function getCleanTransactions(): CleanTransaction[] {
-  if (_cache) return _cache
-
+/**
+ * getCleanTransactions — wrapped with React.cache() for two reasons:
+ * 1. Deduplicates calls within a single server request (multiple components
+ *    can call this without re-parsing the CSV).
+ * 2. Cache is request-scoped, not process-scoped — prevents memory leaks
+ *    and stale data on long-running servers or serverless environments.
+ */
+export const getCleanTransactions = cache(function _getCleanTransactions(): CleanTransaction[] {
   const raw = loadRawTransactions()
 
-  _cache = raw
+  return raw
     .filter(r => r.state === 'settled')
     .map(r => {
       const rawDesc = (r.raw_merchant_description || r.merchant_description || '').trim()
@@ -63,11 +67,11 @@ export function getCleanTransactions(): CleanTransaction[] {
       } satisfies CleanTransaction
     })
     .filter(t => t.partner_name !== '_unknown') // only keep recognised partner transactions
-
-  return _cache
-}
+})
 
 /** Filter to a specific partner's clean transactions. */
-export function getPartnerTransactions(partnerName: string): CleanTransaction[] {
-  return getCleanTransactions().filter(t => t.partner_name === partnerName)
-}
+export const getPartnerTransactions = cache(
+  function _getPartnerTransactions(partnerName: string): CleanTransaction[] {
+    return getCleanTransactions().filter(t => t.partner_name === partnerName)
+  }
+)

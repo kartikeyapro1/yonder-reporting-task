@@ -29,7 +29,7 @@ function pct(a: number, b: number) {
   return `${((a / b) * 100).toFixed(0)}%`
 }
 
-type ChartTab = 'spend' | 'revenue' | 'on-off' | 'new-repeat'
+type ChartTab = 'spend' | 'commission' | 'on-off' | 'new-repeat'
 
 export function InternalPartnerDetailClient({ summary }: Props) {
   const [chartTab, setChartTab] = useState<ChartTab>('spend')
@@ -86,9 +86,9 @@ export function InternalPartnerDetailClient({ summary }: Props) {
       {/* KPI strip */}
       <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <StaggerItem><KpiCard label="Member spend" value={fmt(summary.total_spend_gbp)} /></StaggerItem>
-        <StaggerItem><KpiCard label="Yonder fee earned" value={fmt(summary.total_revenue)} /></StaggerItem>
-        <StaggerItem><KpiCard label="Settled transactions" value={summary.total_transactions.toLocaleString()} /></StaggerItem>
-        <StaggerItem><KpiCard label="Yonder members" value={summary.unique_users.toLocaleString()} /></StaggerItem>
+        <StaggerItem><KpiCard label="Commission" value={fmt(summary.total_revenue)} /></StaggerItem>
+        <StaggerItem><KpiCard label="Visits" value={summary.total_transactions.toLocaleString()} /></StaggerItem>
+        <StaggerItem><KpiCard label="Members" value={summary.unique_users.toLocaleString()} /></StaggerItem>
       </StaggerList>
 
       {/* Incremental spend callout */}
@@ -139,7 +139,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Performance trends</h3>
                 <div className="flex gap-0.5 bg-sand-100 rounded-xl p-0.5" role="tablist" aria-label="Chart view">
-                  {(['spend', 'revenue', 'on-off', 'new-repeat'] as ChartTab[]).map(tab => (
+                  {(['spend', 'commission', 'on-off', 'new-repeat'] as ChartTab[]).map(tab => (
                     <button
                       key={tab}
                       onClick={() => setChartTab(tab)}
@@ -151,13 +151,13 @@ export function InternalPartnerDetailClient({ summary }: Props) {
                           : 'text-ink-400 hover:text-ink-600'
                       }`}
                     >
-                      {tab === 'on-off' ? 'On/Off' : tab === 'new-repeat' ? 'New/Repeat' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {tab === 'on-off' ? 'On/Off' : tab === 'new-repeat' ? 'New/Return' : tab === 'commission' ? 'Commission' : 'Spend'}
                     </button>
                   ))}
                 </div>
               </div>
               {chartTab === 'spend' && <SpendTrendChart data={summary.monthly_breakdown} metric="spend" showOnOffBands />}
-              {chartTab === 'revenue' && <SpendTrendChart data={summary.monthly_breakdown} metric="revenue" />}
+              {chartTab === 'commission' && <SpendTrendChart data={summary.monthly_breakdown} metric="revenue" />}
               {chartTab === 'on-off' && <OnOffComparisonChart data={summary.monthly_breakdown} />}
               {chartTab === 'new-repeat' && <NewVsExistingChart data={summary.monthly_breakdown} metric="spend" />}
             </Card>
@@ -166,11 +166,11 @@ export function InternalPartnerDetailClient({ summary }: Props) {
           {/* Customer acquisition */}
           <div className="flex flex-col gap-4">
             <Card className="p-5">
-              <h3 className="text-[11px] font-semibold text-ink-400 uppercase tracking-caps mb-4">Customer acquisition</h3>
+              <h3 className="text-[11px] font-semibold text-ink-400 uppercase tracking-caps mb-4">Acquisition breakdown</h3>
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-xs text-ink-400 mb-1.5">
-                    <span>New customers</span>
+                    <span>First-time visits</span>
                     <span className="font-tabular font-semibold text-ink-600">{newPct}</span>
                   </div>
                   <div className="h-2 bg-sand-100 rounded-full overflow-hidden">

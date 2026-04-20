@@ -9,6 +9,7 @@
  * - revenue contribution (from commercial model config)
  */
 
+import { cache } from 'react'
 import { getPartnerTransactions } from '@/lib/reporting/clean-transactions'
 import { isOnYonder } from '@/lib/config/partner-periods'
 import { getPartnerUserFirstSeen } from '@/lib/reporting/partner-user-first-seen'
@@ -16,10 +17,8 @@ import { computeRevenue, getCommercialModel, getPartnerConfig } from '@/lib/conf
 import { loadRawExperiences } from '@/lib/data/csv-loader'
 import type { PartnerTransactionFact } from '@/lib/types'
 
-const _cache: Map<string, PartnerTransactionFact[]> = new Map()
-
-export function getPartnerTransactionFacts(partnerName: string): PartnerTransactionFact[] {
-  if (_cache.has(partnerName)) return _cache.get(partnerName)!
+export const getPartnerTransactionFacts = cache(
+  function _getPartnerTransactionFacts(partnerName: string): PartnerTransactionFact[] {
 
   const transactions = getPartnerTransactions(partnerName)
   const experiences = loadRawExperiences()
@@ -79,6 +78,5 @@ export function getPartnerTransactionFacts(partnerName: string): PartnerTransact
     } satisfies PartnerTransactionFact
   })
 
-  _cache.set(partnerName, facts)
   return facts
-}
+})

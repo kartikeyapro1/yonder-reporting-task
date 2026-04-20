@@ -277,7 +277,10 @@ export function ReportPage({ summary, commercials }: Props) {
         {/* 5. Commercial return */}
         <FadeIn>
           <section>
-            <SectionHeader title="Commercial return" sub="How platform fees were calculated for this period" />
+            <SectionHeader
+            title="Commercial summary"
+            sub="Your Yonder partnership investment this period, based on agreed commercial terms"
+          />
 
             <div className="rounded-2xl border border-gray-200/60 bg-white p-5 mb-3 shadow-card">
               {commercials.map((model, i) => (
@@ -291,13 +294,13 @@ export function ReportPage({ summary, commercials }: Props) {
             </div>
 
             <div className="rounded-2xl border border-gray-200/60 bg-white p-5 shadow-card">
-              <DataRow label="Yonder fee (new members)" value={fmt(summary.new_revenue)} highlight />
-              <DataRow label="Yonder fee (returning members)" value={fmt(summary.repeat_revenue)} highlight />
+              <DataRow label="New customer visits (first-time)" value={fmt(summary.new_revenue)} highlight />
+              <DataRow label="Returning customer visits" value={fmt(summary.repeat_revenue)} highlight />
               {summary.boost_revenue > 0 && (
                 <DataRow label="Fee from time-boost periods" value={fmt(summary.boost_revenue)} highlight />
               )}
-              <DataRow label="Total Yonder fee" value={fmt(summary.total_revenue)} highlight large />
-              <DataRow label="Effective fee rate" value={`${revenueMargin.toFixed(2)}% of settled spend`} />
+              <DataRow label="Total partnership investment" value={fmt(summary.total_revenue)} highlight large />
+              <DataRow label="Effective rate" value={`${revenueMargin.toFixed(2)}% of total card spend`} />
             </div>
           </section>
         </FadeIn>

@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import { Header } from '@/components/layout/Header'
 import { InternalDashboardClient } from './InternalDashboardClient'
 import { getAllPartnerSummaries } from '@/lib/reporting/partner-report-summary'
@@ -12,8 +13,19 @@ export const metadata: Metadata = {
   title: 'Partner Analytics',
 }
 
-export default function InternalDashboardPage() {
-  const summaries = getAllPartnerSummaries()
+/**
+ * Cache the full summary computation for 1 hour across requests.
+ * On Vercel this uses the Data Cache (CDN-backed, survives Lambda restarts).
+ * Invalidate via: revalidateTag('partner-data') from an API route.
+ */
+const getCachedSummaries = unstable_cache(
+  async () => getAllPartnerSummaries(),
+  ['all-partner-summaries'],
+  { revalidate: 3600, tags: ['partner-data'] }
+)
+
+export default async function InternalDashboardPage() {
+  const summaries = await getCachedSummaries()
 
   // Current calendar month for determining active status
   const now = new Date()

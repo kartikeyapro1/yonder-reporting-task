@@ -11,6 +11,7 @@
  *   - incremental_spend = avg_monthly_on − avg_monthly_off
  */
 
+import { cache } from 'react'
 import { getPartnerMonthlyMetrics } from '@/lib/reporting/partner-monthly-metrics'
 import { getPartnerTransactionFacts } from '@/lib/reporting/partner-transaction-facts'
 import { getPartnerConfig } from '@/lib/config/partner-commercials'
@@ -72,11 +73,8 @@ function generateInsights(metrics: Omit<PartnerSummaryMetrics, 'insights' | 'mon
   return insights
 }
 
-let _cache: Map<string, PartnerSummaryMetrics> = new Map()
-
-export function getPartnerReportSummary(partnerName: string): PartnerSummaryMetrics | null {
-  if (_cache.has(partnerName)) return _cache.get(partnerName)!
-
+export const getPartnerReportSummary = cache(
+  function _getPartnerReportSummary(partnerName: string): PartnerSummaryMetrics | null {
   const config = getPartnerConfig(partnerName)
   if (!config) return null
 
@@ -150,9 +148,8 @@ export function getPartnerReportSummary(partnerName: string): PartnerSummaryMetr
     insights: generateInsights(partialMetrics),
   }
 
-  _cache.set(partnerName, summary)
   return summary
-}
+})
 
 export function getAllPartnerSummaries(): PartnerSummaryMetrics[] {
   return PARTNER_CONFIGS

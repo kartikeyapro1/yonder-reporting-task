@@ -14,13 +14,16 @@
  * existing customers from day one of the reporting period.
  */
 
+import { cache } from 'react'
 import { getCleanTransactions } from '@/lib/reporting/clean-transactions'
 import { getPartnerConfig } from '@/lib/config/partner-commercials'
 import type { PartnerUserFirstSeen } from '@/lib/types'
 
-let _cache: Map<string, PartnerUserFirstSeen[]> | null = null
-
-function buildFirstSeenMap(): Map<string, PartnerUserFirstSeen[]> {
+/**
+ * buildFirstSeenMap wrapped with cache() so the full scan runs once
+ * per request regardless of how many partners are requested.
+ */
+const buildFirstSeenMap = cache(function _buildFirstSeenMap(): Map<string, PartnerUserFirstSeen[]> {
   const map = new Map<string, PartnerUserFirstSeen[]>()
   const transactions = getCleanTransactions()
 
@@ -48,15 +51,10 @@ function buildFirstSeenMap(): Map<string, PartnerUserFirstSeen[]> {
   }
 
   return map
-}
-
-function getFirstSeenMap(): Map<string, PartnerUserFirstSeen[]> {
-  if (!_cache) _cache = buildFirstSeenMap()
-  return _cache
-}
+})
 
 export function getPartnerUserFirstSeen(partnerName: string): PartnerUserFirstSeen[] {
-  return getFirstSeenMap().get(partnerName) ?? []
+  return buildFirstSeenMap().get(partnerName) ?? []
 }
 
 /**
@@ -69,7 +67,7 @@ export function isNewCustomer(partnerName: string, userId: string, txDate: Date)
   if (!config) return false
 
   const baseline = new Date(config.baseline_date)
-  const map = getFirstSeenMap()
+  const map = buildFirstSeenMap()
   const entries = map.get(partnerName) ?? []
   const entry = entries.find(e => e.user_id === userId)
 

@@ -5,14 +5,12 @@
  * Output is used by trend charts and the monthly breakdown table.
  */
 
+import { cache } from 'react'
 import { getPartnerTransactionFacts } from '@/lib/reporting/partner-transaction-facts'
 import type { PartnerMonthlyMetrics, PartnerTransactionFact } from '@/lib/types'
 
-let _cache: Map<string, PartnerMonthlyMetrics[]> = new Map()
-
-export function getPartnerMonthlyMetrics(partnerName: string): PartnerMonthlyMetrics[] {
-  if (_cache.has(partnerName)) return _cache.get(partnerName)!
-
+export const getPartnerMonthlyMetrics = cache(
+  function _getPartnerMonthlyMetrics(partnerName: string): PartnerMonthlyMetrics[] {
   const facts = getPartnerTransactionFacts(partnerName)
 
   const byMonth = new Map<string, PartnerTransactionFact[]>()
@@ -63,8 +61,8 @@ export function getPartnerMonthlyMetrics(partnerName: string): PartnerMonthlyMet
   }
 
   const sorted = result.sort((a, b) => a.year_month.localeCompare(b.year_month))
-  _cache.set(partnerName, sorted)
   return sorted
-}
+  }
+)
 
 

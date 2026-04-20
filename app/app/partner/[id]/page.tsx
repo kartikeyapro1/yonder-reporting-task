@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import { PartnerFacingClient } from './PartnerFacingClient'
 import { getPartnerReportSummary } from '@/lib/reporting/partner-report-summary'
 import { getPartnerByToken } from '@/lib/config/partner-commercials'
@@ -16,14 +17,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: config ? `${config.display_name} — Partnership` : 'Partner Report' }
 }
 
+function makeCachedSummary(partnerName: string) {
+  return unstable_cache(
+    async () => getPartnerReportSummary(partnerName),
+    [`partner-summary-${partnerName}`],
+    { revalidate: 3600, tags: ['partner-data', `partner-${partnerName}`] }
+  )()
+}
+
 export default async function PartnerFacingPage({ params }: Props) {
   const { id } = await params
 
-  // Partner-facing routes use opaque tokens, not predictable slugs
   const config = getPartnerByToken(id)
   if (!config) notFound()
 
-  const summary = getPartnerReportSummary(config.partner_name)
+  const summary = await makeCachedSummary(config.partner_name)
   if (!summary) notFound()
 
   return <PartnerFacingClient summary={summary} />
