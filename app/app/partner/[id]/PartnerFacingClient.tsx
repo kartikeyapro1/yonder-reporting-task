@@ -1,8 +1,8 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
-import { motion, useScroll, useTransform, useInView } from 'motion/react'
+import { motion, useScroll, useTransform, useInView, useMotionValueEvent, AnimatePresence } from 'motion/react'
 import BlurText from '@/components/ui/BlurText'
 import CountUp from '@/components/ui/CountUp'
 import { SpendTrendChart } from '@/components/charts/SpendTrendChart'
@@ -85,6 +85,20 @@ export function PartnerFacingClient({ summary }: Props) {
   const sec3Ref = useRef(null)
   const sec4Ref = useRef(null)
   const sec5Ref = useRef(null)
+
+  /* Insights sticky-scroll */
+  const insightRef = useRef<HTMLDivElement>(null)
+  const [activeInsight, setActiveInsight] = useState(0)
+  const { scrollYProgress: insightsY } = useScroll({
+    target: insightRef,
+    offset: ['start start', 'end end'],
+  })
+  useMotionValueEvent(insightsY, 'change', (v) => {
+    const n = summary.insights.length
+    if (n === 0) return
+    const idx = Math.min(n - 1, Math.floor(v * n + 0.01))
+    setActiveInsight(Math.max(0, idx))
+  })
 
   const sec0 = useInView(sec0Ref, { margin: '-40% 0px -40% 0px' })
   const sec1 = useInView(sec1Ref, { margin: '-40% 0px -40% 0px' })
@@ -521,46 +535,114 @@ export function PartnerFacingClient({ summary }: Props) {
       )}
 
       {/* ═════════════════════════════════════════════════════ */}
-      {/*  KEY TAKEAWAYS                                       */}
+      {/*  KEY TAKEAWAYS — sticky scroll sequence              */}
       {/* ═════════════════════════════════════════════════════ */}
       {summary.insights.length > 0 && (
-        <section
-          ref={sec5Ref}
-          id="insights"
-          className={`py-28 md:py-40 ${!hasOnOff ? 'bg-sand-50' : summary.boost_transactions > 0 ? 'bg-white' : 'bg-sand-50'}`}
+        <div
+          ref={insightRef}
+          style={{ height: `${summary.insights.length * 100}vh` }}
+          className="relative"
         >
-          <div className="max-w-2xl mx-auto px-6">
-            <FadeIn className="text-center mb-14">
-              <p className="text-[11px] font-semibold text-coral uppercase tracking-caps mb-4">Key takeaways</p>
-              <h2 className="text-[clamp(1.4rem,3vw,2rem)] font-display font-semibold text-ink-900 tracking-display">
-                <SplitHeading text={`What this means for ${summary.display_name}`} />
-              </h2>
-            </FadeIn>
+          <section
+            ref={sec5Ref}
+            id="insights"
+            className="sticky top-0 h-screen overflow-hidden flex items-center bg-white"
+          >
+            <div className="w-full max-w-4xl mx-auto px-8 md:px-12 relative">
 
-            <StaggerList className="space-y-4" staggerDelay={0.1}>
-              {summary.insights.map((insight, i) => (
-                <StaggerItem key={i}>
-                  <motion.div
-                    className="flex gap-4 items-start bg-white rounded-2xl border border-gray-200/60 px-6 py-5 shadow-card cursor-default"
-                    whileHover={{ y: -3, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', transition: { type: 'spring', stiffness: 300, damping: 22 } }}
-                  >
+              {/* Ghost number — huge typographic background element */}
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={activeInsight}
+                  initial={{ opacity: 0, y: 80, scale: 0.9 }}
+                  animate={{ opacity: 0.055, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -60, scale: 1.05 }}
+                  transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                  aria-hidden
+                  className="absolute -top-[12vw] right-0 text-[32vw] md:text-[22vw] font-display font-bold text-ink-900 leading-none select-none pointer-events-none"
+                >
+                  {String(activeInsight + 1).padStart(2, '0')}
+                </motion.span>
+              </AnimatePresence>
+
+              {/* Label */}
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, ease }}
+                className="text-xs font-medium text-coral mb-6 tracking-wider uppercase"
+              >
+                Key takeaways
+              </motion.p>
+
+              {/* Heading */}
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.08, ease }}
+                className="text-sm font-medium text-ink-300 mb-10"
+              >
+                What this means for {summary.display_name}
+              </motion.h2>
+
+              {/* Insight text — transitions on each scroll step */}
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={activeInsight}
+                  initial={{ opacity: 0, y: 36, filter: 'blur(8px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -24, filter: 'blur(6px)' }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  className="text-[clamp(1.15rem,2.8vw,1.65rem)] font-display font-semibold text-ink-900 leading-[1.35] max-w-2xl tracking-tight"
+                >
+                  {summary.insights[activeInsight]}
+                </motion.p>
+              </AnimatePresence>
+
+              {/* Progress track */}
+              <div className="flex items-center gap-3 mt-14">
+                <div className="flex gap-1.5">
+                  {summary.insights.map((_, i) => (
                     <motion.div
-                      className="w-7 h-7 rounded-full bg-coral-50 flex items-center justify-center shrink-0 mt-0.5"
-                      whileHover={{ scale: 1.15, backgroundColor: '#F04E37' }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                    >
-                      <motion.span
-                        className="text-coral text-xs font-bold"
-                        whileHover={{ color: '#ffffff' }}
-                      >{i + 1}</motion.span>
-                    </motion.div>
-                    <p className="text-[15px] text-ink-500 leading-relaxed">{insight}</p>
-                  </motion.div>
-                </StaggerItem>
-              ))}
-            </StaggerList>
-          </div>
-        </section>
+                      key={i}
+                      animate={{
+                        width: i === activeInsight ? 28 : 6,
+                        backgroundColor: i === activeInsight ? '#E8503A' : '#E4E4E0',
+                        opacity: i < activeInsight ? 0.35 : 1,
+                      }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      className="h-[3px] rounded-full"
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-ink-300 font-tabular ml-1">
+                  {activeInsight + 1} / {summary.insights.length}
+                </span>
+              </div>
+
+              {/* Scroll hint (only on first insight) */}
+              <AnimatePresence>
+                {activeInsight === 0 && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ delay: 1.2, duration: 0.5 }}
+                    className="absolute bottom-12 left-8 md:left-12 text-[11px] text-ink-200 flex items-center gap-1.5"
+                  >
+                    <motion.span
+                      animate={{ y: [0, 4, 0] }}
+                      transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
+                    >↓</motion.span>
+                    Scroll to continue
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+          </section>
+        </div>
       )}
 
       {/* ═════════════════════════════════════════════════════ */}

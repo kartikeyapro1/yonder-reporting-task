@@ -147,6 +147,8 @@ export function InternalPartnerDetailClient({ summary }: Props) {
             </button>
             <Link
               href={`/partner/${token}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200/80 bg-white hover:bg-sand-50
                 hover:border-coral/20 transition-all duration-300 text-ink-600 flex items-center gap-1.5"
             >
