@@ -75,7 +75,7 @@ export function OnOffComparisonChart({ data }: OnOffComparisonChartProps) {
           {chartData.map((entry, i) => (
             <Cell
               key={i}
-              fill={entry.is_on_yonder ? '#3d5eff' : '#d1d5e8'}
+              fill={entry.is_on_yonder ? '#F04E37' : '#9DAABF'}
             />
           ))}
         </Bar>

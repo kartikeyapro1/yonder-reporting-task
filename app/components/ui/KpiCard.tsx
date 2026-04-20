@@ -7,43 +7,68 @@ interface KpiCardProps {
   value: string
   sub?: string
   trend?: 'up' | 'down' | 'flat'
-  accent?: 'green' | 'blue' | 'amber' | 'purple'
+  accent?: 'green' | 'coral' | 'amber' | 'purple' | 'neutral'
+  dark?: boolean   // for internal dark surfaces
   delay?: number
 }
 
-const accentClasses = {
-  green: 'from-accent-green/10 to-accent-green/5 text-accent-green',
-  blue: 'from-brand-100 to-brand-50 text-brand-600',
-  amber: 'from-accent-amber/15 to-accent-amber/5 text-accent-amber',
-  purple: 'from-accent-purple/10 to-accent-purple/5 text-accent-purple',
+const lightAccent = {
+  green:   'border-accent-green/20 bg-white',
+  coral:   'border-coral/20 bg-white',
+  amber:   'border-accent-amber/20 bg-white',
+  purple:  'border-accent-purple/20 bg-white',
+  neutral: 'border-surface-border bg-white',
 }
 
-const trendIcons = {
-  up: { icon: '↑', cls: 'text-accent-green' },
+const lightValueColor = {
+  green:   'text-accent-green',
+  coral:   'text-coral',
+  amber:   'text-accent-amber',
+  purple:  'text-accent-purple',
+  neutral: 'text-ink',
+}
+
+const darkAccent = {
+  green:   'border-accent-green/20 bg-navy-800',
+  coral:   'border-coral/20 bg-navy-800',
+  amber:   'border-accent-amber/20 bg-navy-800',
+  purple:  'border-accent-purple/20 bg-navy-800',
+  neutral: 'border-navy-600 bg-navy-800',
+}
+
+const trendConfig = {
+  up:   { icon: '↑', cls: 'text-accent-green' },
   down: { icon: '↓', cls: 'text-accent-red' },
   flat: { icon: '—', cls: 'text-ink-tertiary' },
 }
 
-export function KpiCard({ label, value, sub, trend, accent = 'blue', delay = 0 }: KpiCardProps) {
-  const trendInfo = trend ? trendIcons[trend] : null
+export function KpiCard({ label, value, sub, trend, accent = 'neutral', dark = false, delay = 0 }: KpiCardProps) {
+  const containerCls = dark ? darkAccent[accent] : lightAccent[accent]
+  const valueCls = dark ? 'text-white' : lightValueColor[accent]
+  const labelCls = dark ? 'text-navy-300' : 'text-ink-tertiary'
+  const subCls   = dark ? 'text-navy-400' : 'text-ink-tertiary'
+  const trendInfo = trend ? trendConfig[trend] : null
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut', delay }}
-      className={`bg-gradient-to-br ${accentClasses[accent]} rounded-2xl p-5 border border-white/50 shadow-card`}
+      className={`rounded-2xl border p-5 shadow-card-sm ${containerCls}`}
     >
-      <p className="text-xs font-semibold uppercase tracking-widest text-ink-tertiary mb-2">{label}</p>
+      <p className={`text-[11px] font-semibold uppercase tracking-widest mb-2.5 ${labelCls}`}>
+        {label}
+      </p>
       <div className="flex items-end gap-2">
-        <p className="text-3xl font-bold text-ink leading-none">{value}</p>
+        <p className={`text-2xl font-bold leading-none font-tabular ${valueCls}`}>{value}</p>
         {trendInfo && (
           <span className={`text-sm font-semibold pb-0.5 ${trendInfo.cls}`}>
             {trendInfo.icon}
           </span>
         )}
       </div>
-      {sub && <p className="text-xs text-ink-secondary mt-1.5">{sub}</p>}
+      {sub && <p className={`text-xs mt-1.5 ${subCls}`}>{sub}</p>}
     </motion.div>
   )
 }
+

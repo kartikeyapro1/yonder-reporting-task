@@ -10,19 +10,59 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-surface-muted text-ink font-sans;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
   * {
     @apply border-surface-border;
+  }
+
+  /* Tighter tracking on large headings */
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Tabular numbers for data tables */
+  .font-tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  /* Yonder coral underline decoration */
+  .coral-underline {
+    position: relative;
+  }
+  .coral-underline::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, #F04E37, #F97055);
+    border-radius: 1px;
+  }
+
+  /* Smooth scroll region */
+  .scroll-region {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Print styles for report page */
+  @media print {
+    .no-print { display: none !important; }
+    .print-break { page-break-before: always; }
   }
 }

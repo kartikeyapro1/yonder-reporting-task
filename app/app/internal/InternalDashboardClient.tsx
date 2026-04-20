@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { KpiCard } from '@/components/ui/KpiCard'
 import { Badge } from '@/components/ui/Badge'
 import type { InternalDashboardRow } from '@/lib/types'
 
@@ -30,6 +29,17 @@ function fmtMonth(ym: string) {
   return `${months[parseInt(m) - 1]} ${y}`
 }
 
+/** Top-level metric tile for the summary bar */
+function SummaryTile({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[11px] font-semibold uppercase tracking-widest text-navy-400">{label}</span>
+      <span className="text-xl font-bold text-white font-tabular">{value}</span>
+      {sub && <span className="text-xs text-navy-400">{sub}</span>}
+    </div>
+  )
+}
+
 export function InternalDashboardClient({ rows, totals }: Props) {
   const router = useRouter()
   const [search, setSearch] = useState('')
@@ -39,96 +49,153 @@ export function InternalDashboardClient({ rows, totals }: Props) {
     r.category.toLowerCase().includes(search.toLowerCase())
   )
 
+  const activeCount = rows.filter(r => r.is_currently_active).length
+
   return (
-    <main className="max-w-screen-xl mx-auto px-6 py-10">
+    <div className="min-h-screen bg-navy-950">
 
-      {/* Page heading */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-ink tracking-tight">Partner Analytics</h1>
-        <p className="text-ink-secondary text-sm mt-1">All-partner view across the Yonder platform. Click any partner to drill into detail.</p>
-      </div>
+      {/* ── Dark stats bar ────────────────────────────────────────────── */}
+      <div className="bg-navy-900 border-b border-navy-700">
+        <div className="max-w-screen-xl mx-auto px-6 py-6">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h1 className="text-xl font-bold text-white tracking-tight">Partner Analytics</h1>
+              <p className="text-navy-400 text-sm mt-0.5">All-partner view · {rows.length} partners tracked</p>
+            </div>
+            <span className="text-xs font-medium text-accent-green bg-accent-green/10 border border-accent-green/20 px-2.5 py-1 rounded-full">
+              {activeCount} active
+            </span>
+          </div>
 
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <KpiCard label="Total Spend" value={fmt(totals.totalSpend)} accent="blue" delay={0} />
-        <KpiCard label="Total Revenue" value={fmt(totals.totalRevenue)} accent="green" delay={0.05} />
-        <KpiCard label="Transactions" value={totals.totalTx.toLocaleString()} accent="purple" delay={0.1} />
-        <KpiCard label="Unique Users" value={totals.totalUsers.toLocaleString()} accent="amber" delay={0.15} />
-      </div>
-
-      {/* Partner table */}
-      <div className="bg-white rounded-2xl shadow-card border border-surface-border overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface-border flex items-center justify-between gap-4">
-          <h2 className="font-semibold text-ink text-sm">Partners</h2>
-          <input
-            type="text"
-            placeholder="Search partners…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-56 text-sm px-3 py-1.5 rounded-lg border border-surface-border bg-surface-muted outline-none focus:ring-2 focus:ring-brand-200 transition"
-          />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4 pt-4 border-t border-navy-700">
+            <SummaryTile label="Total Spend" value={fmt(totals.totalSpend)} />
+            <SummaryTile label="Total Revenue" value={fmt(totals.totalRevenue)} />
+            <SummaryTile label="Transactions" value={totals.totalTx.toLocaleString()} />
+            <SummaryTile label="Unique Users" value={totals.totalUsers.toLocaleString()} />
+          </div>
         </div>
-
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-surface-muted">
-              <th className="text-left px-6 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Partner</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Category</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Spend</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Revenue</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Txns</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Users</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Last Month</th>
-              <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-ink-tertiary">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((row, i) => {
-              const slug = row.partner_name.toLowerCase().replace(/\s+/g, '-')
-              return (
-                <motion.tr
-                  key={row.partner_name}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.04 }}
-                  onClick={() => router.push(`/internal/partner/${slug}`)}
-                  className="border-t border-surface-border hover:bg-brand-50/40 cursor-pointer transition-colors group"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-bold text-xs shrink-0">
-                        {row.display_name[0]}
-                      </div>
-                      <span className="font-semibold text-ink group-hover:text-brand-600 transition-colors">
-                        {row.display_name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-ink-secondary">{row.category}</td>
-                  <td className="px-4 py-4 text-right font-mono text-ink font-medium">{fmt(row.total_spend_gbp)}</td>
-                  <td className="px-4 py-4 text-right font-mono text-accent-green font-semibold">{fmt(row.total_revenue)}</td>
-                  <td className="px-4 py-4 text-right text-ink-secondary">{row.total_transactions.toLocaleString()}</td>
-                  <td className="px-4 py-4 text-right text-ink-secondary">{row.unique_users.toLocaleString()}</td>
-                  <td className="px-4 py-4 text-right text-ink-tertiary text-xs">{fmtMonth(row.last_active_month)}</td>
-                  <td className="px-6 py-4">
-                    <Badge
-                      label={row.is_currently_active ? 'Active' : 'Inactive'}
-                      variant={row.is_currently_active ? 'active' : 'inactive'}
-                    />
-                  </td>
-                </motion.tr>
-              )
-            })}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-6 py-12 text-center text-ink-tertiary text-sm">
-                  No partners match your search.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
       </div>
-    </main>
+
+      {/* ── Partner table ─────────────────────────────────────────────── */}
+      <div className="max-w-screen-xl mx-auto px-6 py-8">
+        <div className="bg-white rounded-2xl shadow-deep overflow-hidden">
+
+          {/* Table toolbar */}
+          <div className="px-6 py-4 border-b border-surface-border flex items-center justify-between gap-4">
+            <h2 className="text-sm font-semibold text-ink">Partners</h2>
+            <input
+              type="text"
+              placeholder="Search by name or category…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-60 text-sm px-3 py-1.5 rounded-lg border border-surface-border bg-surface-muted outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/40 transition placeholder:text-ink-tertiary"
+            />
+          </div>
+
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-surface-muted">
+                {['Partner', 'Category', 'Spend', 'Revenue', 'Txns', 'Users', 'Last Month', 'Status'].map((h, i) => (
+                  <th
+                    key={h}
+                    className={`py-3 text-[11px] font-semibold uppercase tracking-wider text-ink-tertiary ${
+                      i === 0 ? 'text-left px-6' : i <= 1 ? 'text-left px-4' : i >= 6 ? 'px-6' : 'text-right px-4'
+                    }`}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-16 text-center">
+                    <p className="text-ink-tertiary text-sm">
+                      {search ? `No partners match "${search}"` : 'No partner data available.'}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((row, i) => {
+                  const slug = row.partner_name.toLowerCase().replace(/\s+/g, '-')
+                  const trendIcon = row.revenue_trend === 'up' ? '↑' : row.revenue_trend === 'down' ? '↓' : null
+                  const trendCls  = row.revenue_trend === 'up' ? 'text-accent-green' : row.revenue_trend === 'down' ? 'text-accent-red' : ''
+
+                  return (
+                    <motion.tr
+                      key={row.partner_name}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.03 }}
+                      onClick={() => router.push(`/internal/partner/${slug}`)}
+                      className="border-t border-surface-border hover:bg-coral-subtle cursor-pointer transition-colors group"
+                    >
+                      {/* Partner */}
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-navy-900 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                            {row.display_name[0]}
+                          </div>
+                          <span className="font-semibold text-ink group-hover:text-coral transition-colors">
+                            {row.display_name}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Category */}
+                      <td className="px-4 py-3.5 text-ink-secondary text-xs">{row.category}</td>
+
+                      {/* Spend */}
+                      <td className="px-4 py-3.5 text-right font-tabular text-ink font-medium">
+                        {fmt(row.total_spend_gbp)}
+                      </td>
+
+                      {/* Revenue */}
+                      <td className="px-4 py-3.5 text-right font-tabular">
+                        <span className="text-accent-green font-semibold">{fmt(row.total_revenue)}</span>
+                        {trendIcon && (
+                          <span className={`ml-1.5 text-xs font-bold ${trendCls}`}>{trendIcon}</span>
+                        )}
+                      </td>
+
+                      {/* Txns */}
+                      <td className="px-4 py-3.5 text-right font-tabular text-ink-secondary">
+                        {row.total_transactions.toLocaleString()}
+                      </td>
+
+                      {/* Users */}
+                      <td className="px-4 py-3.5 text-right font-tabular text-ink-secondary">
+                        {row.unique_users.toLocaleString()}
+                      </td>
+
+                      {/* Last month */}
+                      <td className="px-6 py-3.5 text-right text-ink-tertiary text-xs">
+                        {fmtMonth(row.last_active_month)}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-6 py-3.5">
+                        <Badge
+                          label={row.is_currently_active ? 'Active' : 'Inactive'}
+                          variant={row.is_currently_active ? 'active' : 'inactive'}
+                        />
+                      </td>
+                    </motion.tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+
+          {/* Footer count */}
+          {filtered.length > 0 && (
+            <div className="px-6 py-3 border-t border-surface-border bg-surface-muted text-xs text-ink-tertiary">
+              Showing {filtered.length} of {rows.length} partners
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

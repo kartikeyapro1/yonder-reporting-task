@@ -5,23 +5,28 @@ import { motion } from 'framer-motion'
 interface InsightCardProps {
   text: string
   index?: number
+  dark?: boolean
 }
 
-export function InsightCard({ text, index = 0 }: InsightCardProps) {
+export function InsightCard({ text, index = 0, dark = false }: InsightCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut', delay: index * 0.08 }}
-      className="flex gap-3 items-start bg-brand-50 border border-brand-100 rounded-xl px-4 py-3"
+      className={`flex gap-3 items-start rounded-xl px-4 py-3.5 ${
+        dark
+          ? 'bg-navy-800 border border-navy-600'
+          : 'bg-coral-subtle border border-coral/10'
+      }`}
     >
-      <span className="mt-0.5 text-brand-500 shrink-0">
-        <svg width="16" height="16" fill="none" viewBox="0 0 16 16">
-          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M8 5v4M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+      {/* Coral dot */}
+      <span className="mt-1 shrink-0">
+        <span className="block w-1.5 h-1.5 rounded-full bg-coral" />
       </span>
-      <p className="text-sm text-ink-secondary leading-relaxed">{text}</p>
+      <p className={`text-sm leading-relaxed ${
+        dark ? 'text-navy-200' : 'text-ink-secondary'
+      }`}>{text}</p>
     </motion.div>
   )
 }

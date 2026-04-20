@@ -67,8 +67,8 @@ export function SpendTrendChart({ data, metric = 'spend', showOnOffBands }: Spen
       <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3d5eff" stopOpacity={0.18} />
-            <stop offset="100%" stopColor="#3d5eff" stopOpacity={0.01} />
+            <stop offset="0%" stopColor="#F04E37" stopOpacity={0.2} />
+            <stop offset="100%" stopColor="#F04E37" stopOpacity={0.01} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#eaecf4" vertical={false} />
@@ -103,11 +103,11 @@ export function SpendTrendChart({ data, metric = 'spend', showOnOffBands }: Spen
         <Area
           type="monotone"
           dataKey={key}
-          stroke="#3d5eff"
+          stroke="#F04E37"
           strokeWidth={2}
           fill="url(#areaGrad)"
           dot={false}
-          activeDot={{ r: 4, fill: '#3d5eff', stroke: '#fff', strokeWidth: 2 }}
+          activeDot={{ r: 4, fill: '#F04E37', stroke: '#fff', strokeWidth: 2 }}
         />
       </AreaChart>
     </ResponsiveContainer>

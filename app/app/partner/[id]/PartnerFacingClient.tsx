@@ -33,10 +33,10 @@ function MetricTile({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut', delay }}
-      className="p-6 bg-white rounded-2xl border border-surface-border shadow-card"
+      className="p-6 bg-white rounded-2xl border border-sand-border shadow-card-sm"
     >
       <p className="text-xs font-semibold uppercase tracking-widest text-ink-tertiary mb-2">{label}</p>
-      <p className="text-3xl font-bold text-ink">{value}</p>
+          <p className="text-3xl font-bold text-ink-warm">{value}</p>
       {sub && <p className="text-xs text-ink-secondary mt-1">{sub}</p>}
     </motion.div>
   )
@@ -54,7 +54,8 @@ export function PartnerFacingClient({ summary }: Props) {
     : 0
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-14">
+    <main className="min-h-screen bg-surface-warm">
+      <div className="max-w-3xl mx-auto px-6 py-14">
 
       {/* Hero section */}
       <motion.div
@@ -64,17 +65,18 @@ export function PartnerFacingClient({ summary }: Props) {
         className="mb-14"
       >
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white font-bold text-lg">
+          <div className="w-11 h-11 rounded-2xl bg-coral flex items-center justify-center text-white font-bold text-lg shadow-sm">
             {summary.display_name[0]}
           </div>
           <div>
             <p className="text-xs text-ink-tertiary font-medium uppercase tracking-wider">Yonder Partner Report</p>
-            <h1 className="text-xl font-bold text-ink">{summary.display_name}</h1>
+            <h1 className="text-xl font-bold text-ink-warm">{summary.display_name}</h1>
           </div>
         </div>
-        <p className="text-ink-secondary text-sm">{summary.period_label}</p>
+        <p className="text-ink-secondary text-sm mb-2">{summary.period_label}</p>
 
-        <div className="mt-6 h-px bg-gradient-to-r from-brand-200 via-brand-100 to-transparent" />
+        {/* Coral divider */}
+        <div className="mt-6 h-px bg-gradient-to-r from-coral/40 via-coral/10 to-transparent" />
       </motion.div>
 
       {/* Summary headline numbers */}
@@ -94,8 +96,8 @@ export function PartnerFacingClient({ summary }: Props) {
       >
         <h2 className="text-base font-semibold text-ink mb-5">Performance at a glance</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-brand-50 to-white rounded-2xl border border-brand-100 p-5">
-            <p className="text-xs uppercase tracking-widest font-semibold text-brand-400 mb-2">Avg. Transaction</p>
+          <div className="bg-gradient-to-br from-coral-subtle to-white rounded-2xl border border-coral/10 p-5">
+            <p className="text-xs uppercase tracking-widest font-semibold text-coral mb-2">Avg. Transaction</p>
             <p className="text-2xl font-bold text-ink">{fmt(avgSpend)}</p>
             <p className="text-xs text-ink-tertiary mt-1">per visit</p>
           </div>
@@ -144,14 +146,14 @@ export function PartnerFacingClient({ summary }: Props) {
           </div>
           <div className="bg-white rounded-2xl border border-surface-border shadow-card p-6 flex flex-col justify-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-brand-500 shrink-0" />
+              <div className="w-2 h-2 rounded-full bg-coral shrink-0" />
               <div>
                 <p className="text-xs text-ink-tertiary">New customer spend</p>
                 <p className="font-bold text-ink">{fmt(summary.new_spend_gbp)}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-brand-200 shrink-0" />
+              <div className="w-2 h-2 rounded-full bg-navy-200 shrink-0" />
               <div>
                 <p className="text-xs text-ink-tertiary">Returning customer spend</p>
                 <p className="font-bold text-ink">{fmt(summary.repeat_spend_gbp)}</p>
@@ -184,9 +186,10 @@ export function PartnerFacingClient({ summary }: Props) {
       {/* Footer */}
       <div className="pt-8 border-t border-surface-border flex items-center justify-between text-xs text-ink-tertiary">
         <span>Powered by Yonder · Confidential</span>
-        <Link href={`/report/${slug}`} className="text-brand-600 hover:text-brand-700 font-medium transition-colors">
+        <Link href={`/report/${slug}`} className="text-coral hover:text-coral-dark font-medium transition-colors">
           View full report →
         </Link>
+      </div>
       </div>
     </main>
   )

@@ -59,7 +59,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
           </Link>
           <Link
             href={`/report/${slug}`}
-            className="text-sm font-medium px-4 py-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition-colors"
+            className="text-sm font-medium px-4 py-2 rounded-xl bg-coral text-white hover:bg-coral-dark transition-colors"
           >
             View report
           </Link>
@@ -68,7 +68,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <KpiCard label="Total Spend" value={fmt(summary.total_spend_gbp)} accent="blue" delay={0} />
+        <KpiCard label="Total Spend" value={fmt(summary.total_spend_gbp)} accent="neutral" delay={0} />
         <KpiCard label="Total Revenue" value={fmt(summary.total_revenue)} accent="green" delay={0.05} />
         <KpiCard label="Transactions" value={summary.total_transactions.toLocaleString()} accent="purple" delay={0.1} />
         <KpiCard label="Unique Users" value={summary.unique_users.toLocaleString()} accent="amber" delay={0.15} />
@@ -156,13 +156,13 @@ export function InternalPartnerDetailClient({ summary }: Props) {
                 </div>
                 <div className="h-1.5 bg-surface-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-brand-500 rounded-full transition-all"
+                    className="h-full bg-coral rounded-full transition-all"
                     style={{ width: pct(summary.new_transactions, summary.total_transactions) }}
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div className="bg-brand-50 rounded-xl p-3">
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className="bg-coral-subtle rounded-xl p-3">
                   <p className="text-xs text-ink-tertiary mb-1">New</p>
                   <p className="font-bold text-ink text-base">{summary.new_transactions}</p>
                   <p className="text-xs text-ink-secondary">{fmt(summary.new_spend_gbp)} spend</p>

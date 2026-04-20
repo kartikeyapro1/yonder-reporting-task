@@ -73,12 +73,12 @@ export function ReportPage({ summary, commercials }: Props) {
   return (
     <div className="min-h-screen bg-white">
       {/* Report header bar */}
-      <div className="bg-gradient-to-r from-brand-950 to-brand-800 text-white">
+      <div className="bg-navy-gradient text-white">
         <div className="max-w-3xl mx-auto px-8 py-10">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-md bg-coral flex items-center justify-center">
                   <span className="text-white text-xs font-bold">Y</span>
                 </div>
                 <span className="text-white/70 text-sm font-medium">Yonder Partner Report</span>
@@ -105,7 +105,7 @@ export function ReportPage({ summary, commercials }: Props) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.07 }}
-                className="bg-white/10 rounded-xl px-4 py-3"
+                className="bg-white/10 rounded-xl px-4 py-3 border border-white/10"
               >
                 <p className="text-white/50 text-xs uppercase tracking-wider mb-1">{kpi.label}</p>
                 <p className="text-white text-xl font-bold">{kpi.value}</p>
@@ -130,7 +130,7 @@ export function ReportPage({ summary, commercials }: Props) {
                 transition={{ delay: 0.1 + i * 0.06 }}
                 className="flex gap-3 text-sm text-ink-secondary"
               >
-                <span className="text-brand-400 mt-0.5 shrink-0">→</span>
+                <span className="text-coral/80 mt-0.5 shrink-0">→</span>
                 <p>{insight}</p>
               </motion.div>
             ))}

@@ -3,51 +3,84 @@ import Link from 'next/link'
 interface HeaderProps {
   section?: 'internal' | 'partner' | 'report'
   partnerName?: string
+  partnerSlug?: string
 }
 
-export function Header({ section, partnerName }: HeaderProps) {
+/** Yonder wordmark as inline SVG — matches brand font weight */
+function YonderLogo({ dark = false }: { dark?: boolean }) {
   return (
-    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-surface-border">
-      <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/internal" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center">
-              <span className="text-white text-xs font-bold">Y</span>
-            </div>
-            <span className="font-semibold text-ink text-sm tracking-tight">Yonder</span>
-          </Link>
+    <div className="flex items-center gap-2.5">
+      {/* Coral Y mark */}
+      <div className="w-7 h-7 rounded-lg bg-coral flex items-center justify-center shrink-0 shadow-sm">
+        <span className="text-white text-sm font-black tracking-tighter leading-none">Y</span>
+      </div>
+      <span className={`text-sm font-bold tracking-tight ${dark ? 'text-ink-inverse' : 'text-ink'}`}>
+        Yonder
+      </span>
+    </div>
+  )
+}
 
-          {section === 'internal' && (
+/**
+ * Two visual modes:
+ *   internal — dark navy bar, dense nav, "Internal" badge
+ *   partner / report — white frosted bar, minimal nav, partner name
+ */
+export function Header({ section, partnerName, partnerSlug }: HeaderProps) {
+  const isInternal = section === 'internal'
+
+  if (isInternal) {
+    return (
+      <header className="sticky top-0 z-30 bg-navy-900 border-b border-navy-700">
+        <div className="max-w-screen-xl mx-auto px-6 h-12 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Link href="/internal">
+              <YonderLogo dark />
+            </Link>
             <nav className="flex items-center gap-1">
-              <Link href="/internal" className="px-3 py-1.5 rounded-lg text-sm font-medium text-ink-secondary hover:text-ink hover:bg-surface-muted transition-colors">
+              <Link
+                href="/internal"
+                className="px-3 py-1 rounded-md text-xs font-medium text-navy-200 hover:text-white hover:bg-navy-700 transition-colors"
+              >
                 Partners
               </Link>
             </nav>
-          )}
+          </div>
+          <span className="text-xs font-medium text-navy-400 bg-navy-800 border border-navy-600 px-2.5 py-0.5 rounded-full">
+            Internal
+          </span>
+        </div>
+      </header>
+    )
+  }
 
-          {section === 'partner' && partnerName && (
+  return (
+    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-surface-border">
+      <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/internal">
+            <YonderLogo />
+          </Link>
+          {partnerName && (
             <div className="flex items-center gap-2 text-sm text-ink-tertiary">
-              <Link href="/internal" className="hover:text-ink transition-colors">Partners</Link>
-              <span>/</span>
+              <span className="text-surface-border">/</span>
               <span className="text-ink font-medium">{partnerName}</span>
             </div>
           )}
         </div>
 
         <div className="flex items-center gap-3">
-          {section === 'internal' && (
-            <span className="text-xs text-ink-tertiary bg-surface-muted px-2.5 py-1 rounded-full border border-surface-border">
-              Internal
-            </span>
-          )}
-          {section === 'partner' && (
-            <span className="text-xs text-ink-tertiary bg-surface-muted px-2.5 py-1 rounded-full border border-surface-border">
-              Partner View
-            </span>
+          {section === 'partner' && partnerSlug && (
+            <Link
+              href={`/report/${partnerSlug}`}
+              className="text-xs font-medium text-coral hover:text-coral-dark transition-colors"
+            >
+              Full report →
+            </Link>
           )}
           {section === 'report' && (
-            <span className="text-xs text-ink-tertiary bg-surface-muted px-2.5 py-1 rounded-full border border-surface-border">
-              Report
+            <span className="text-xs font-medium text-ink-tertiary border border-surface-border rounded-full px-2.5 py-0.5">
+              Partner Report
             </span>
           )}
         </div>
@@ -55,3 +88,4 @@ export function Header({ section, partnerName }: HeaderProps) {
     </header>
   )
 }
+

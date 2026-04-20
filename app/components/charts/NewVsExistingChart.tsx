@@ -70,8 +70,8 @@ export function NewVsExistingChart({ data, metric = 'spend' }: NewVsExistingChar
           iconType="circle"
           iconSize={8}
         />
-        <Bar dataKey="New" stackId="a" fill="#3d5eff" radius={[0, 0, 0, 0]} />
-        <Bar dataKey="Repeat" stackId="a" fill="#c0d2ff" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="New" stackId="a" fill="#F04E37" radius={[0, 0, 0, 0]} />
+        <Bar dataKey="Repeat" stackId="a" fill="#9DAABF" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   )
