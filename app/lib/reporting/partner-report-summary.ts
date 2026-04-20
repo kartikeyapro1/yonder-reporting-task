@@ -4,11 +4,25 @@
  * Produces the final rolled-up PartnerSummaryMetrics used by all dashboards.
  * Also generates plain-English insight copy from the metrics.
  *
- * Incremental spend calculation (Scenario 1 / FRIVE):
- *   - "on Yonder" spend = total settled spend during active periods
- *   - "off Yonder" spend = total settled spend during inactive periods
- *   - Normalised to per-month averages before computing the delta
- *   - incremental_spend = avg_monthly_on − avg_monthly_off
+ * INCREMENTAL SPEND CALCULATION:
+ *   incremental_spend is the per-month average uplift attributable to the
+ *   Yonder partnership, computed as:
+ *
+ *     avg_monthly_on_spend  = total on-Yonder spend  ÷ number of on-Yonder months
+ *     avg_monthly_off_spend = total off-Yonder spend ÷ number of off-Yonder months
+ *     incremental_spend     = avg_monthly_on_spend − avg_monthly_off_spend
+ *
+ *   This normalises for the fact that active and inactive periods may have
+ *   different month counts. A positive number means Yonder members spend more
+ *   per month when the partner is featured on the platform.
+ *
+ *   Fallback: if only one side has data (e.g. a new partner with no inactive
+ *   months yet), incremental_spend = total on_spend − total off_spend (raw
+ *   totals). This is surfaced as "all spend occurred during active periods"
+ *   rather than as a per-month uplift figure in the UI.
+ *
+ *   Both on/off sides filter to post-baseline transactions only, so pre-deal
+ *   history never contaminates the comparison.
  */
 
 import { cache } from 'react'
@@ -37,51 +51,73 @@ function generateInsights(metrics: Omit<PartnerSummaryMetrics, 'insights' | 'mon
     ? metrics.total_revenue / metrics.unique_users
     : 0
 
-  // Per-month on/off comparison (only when both sides have data)
+  // 1. Rewards uplift — most commercially important insight, shown first
   if (metrics.on_months_count > 0 && metrics.off_months_count > 0) {
+    const upliftPct = metrics.avg_monthly_off_spend > 0
+      ? ((metrics.avg_monthly_on_spend - metrics.avg_monthly_off_spend) / metrics.avg_monthly_off_spend) * 100
+      : 0
     const sign = metrics.incremental_spend >= 0 ? '+' : ''
-    insights.push(
-      `Avg. monthly spend when rewards were active: ${formatGbp(metrics.avg_monthly_on_spend)} (${metrics.on_months_count} months). When inactive: ${formatGbp(metrics.avg_monthly_off_spend)} (${metrics.off_months_count} months). Per-month uplift: ${sign}${formatGbp(metrics.incremental_spend)}.`
-    )
+    if (upliftPct > 0) {
+      insights.push(
+        `When your Yonder rewards were live, customers spent ${formatGbp(metrics.avg_monthly_on_spend)} per month on average — a ${sign}${formatGbp(metrics.incremental_spend)} uplift (${Math.round(upliftPct)}% more) compared to the ${metrics.off_months_count} months when rewards were inactive.`
+      )
+    } else {
+      insights.push(
+        `Monthly spend averaged ${formatGbp(metrics.avg_monthly_on_spend)} during active reward periods and ${formatGbp(metrics.avg_monthly_off_spend)} during inactive periods across ${metrics.on_months_count + metrics.off_months_count} months.`
+      )
+    }
   } else if (metrics.on_yonder_spend > 0 && metrics.off_months_count === 0) {
     insights.push(
-      `All recorded spend (${formatGbp(metrics.on_yonder_spend)}) occurred during active Yonder months — no inactive comparison period available yet.`
+      `${formatGbp(metrics.on_yonder_spend)} in total customer spend was recorded during ${metrics.on_months_count} active Yonder month${metrics.on_months_count !== 1 ? 's' : ''}. A comparison period will be available once inactive months are observed.`
     )
   }
 
+  // 2. Customer acquisition vs loyalty
   if (newPct > 0 && metrics.total_transactions > 0) {
-    insights.push(
-      `${newPct.toFixed(0)}% of transactions (${metrics.new_transactions.toLocaleString()}) were first-time visits; ${(100 - newPct).toFixed(0)}% (${metrics.repeat_transactions.toLocaleString()}) from returning customers.`
-    )
+    const repeatPct = 100 - newPct
+    if (repeatPct > 50) {
+      insights.push(
+        `${repeatPct.toFixed(0)}% of visits came from returning customers — ${metrics.repeat_transactions.toLocaleString()} transactions from people who chose to come back. Yonder is building genuine loyalty, not just first-time footfall.`
+      )
+    } else {
+      insights.push(
+        `Yonder introduced ${metrics.new_users.toLocaleString()} first-time customers to ${metrics.display_name}, representing ${newPct.toFixed(0)}% of all transactions and ${formatGbp(metrics.new_spend_gbp)} in new-customer spend.`
+      )
+    }
   }
 
+  // 3. Boost periods
   if (metrics.boost_transactions > 0) {
     const boostPct = (metrics.boost_transactions / metrics.total_transactions) * 100
     insights.push(
-      `${metrics.boost_transactions.toLocaleString()} transactions (${boostPct.toFixed(0)}%) occurred during time-boost promotional windows, generating ${formatGbp(metrics.boost_spend_gbp)} in spend.`
+      `Time-limited reward boosts drove ${metrics.boost_transactions.toLocaleString()} transactions (${boostPct.toFixed(0)}% of total visits), generating ${formatGbp(metrics.boost_spend_gbp)} in spend — demonstrating that featured promotional windows create measurable spikes in customer activity.`
     )
   }
 
+  // 4. Reward engagement
+  if (metrics.experience_engagement_rate > 0) {
+    const pct = (metrics.experience_engagement_rate * 100).toFixed(0)
+    const denialNote = metrics.denied_experience_transactions > 0
+      ? ` ${metrics.denied_experience_transactions} visit${metrics.denied_experience_transactions > 1 ? 's were' : ' was'} declined because the card wasn't linked to the Yonder app — a reminder that in-app linking drives full programme participation.`
+      : ''
+    insights.push(
+      `${pct}% of visits (${metrics.experience_matched_transactions.toLocaleString()}) successfully triggered a Yonder reward experience — confirming strong programme participation among your customers.${denialNote}`
+    )
+  }
+
+  // 5. Points / loyalty currency
   if (metrics.total_points_earned > 0) {
     const avgPts = metrics.total_transactions > 0 ? Math.round(metrics.total_points_earned / metrics.total_transactions) : 0
     insights.push(
-      `Yonder members earned ${metrics.total_points_earned.toLocaleString()} points across all visits (avg. ${avgPts.toLocaleString()} pts per transaction).`
+      `Yonder members earned ${metrics.total_points_earned.toLocaleString()} points visiting ${metrics.display_name} — an average of ${avgPts.toLocaleString()} points per transaction. Points are a key driver of repeat visits across the Yonder network.`
     )
   }
 
-  if (metrics.experience_engagement_rate > 0) {
-    const pct = (metrics.experience_engagement_rate * 100).toFixed(0)
-    insights.push(
-      `${pct}% of visits (${metrics.experience_matched_transactions.toLocaleString()}) triggered a Yonder reward experience.${metrics.denied_experience_transactions > 0 ? ` ${metrics.denied_experience_transactions} visit${metrics.denied_experience_transactions > 1 ? 's were' : ' was'} denied due to the card not being linked to the Yonder app.` : ''}`
-    )
-  }
-
+  // 6. Average basket size
   if (avgSpend > 0) {
-    insights.push(`Average transaction value: ${formatGbp(avgSpend)} across ${metrics.unique_users.toLocaleString()} unique customers (${metrics.total_transactions.toLocaleString()} total transactions).`)
-  }
-
-  if (revenuePerUser > 0) {
-    insights.push(`Revenue per customer: ${formatGbp(revenuePerUser)}.`)
+    insights.push(
+      `Yonder members spent an average of ${formatGbp(avgSpend)} per visit across ${metrics.unique_users.toLocaleString()} unique customers. ${revenuePerUser > 0 ? `The partnership generated ${formatGbp(revenuePerUser)} of value per customer acquired through Yonder.` : ''}`
+    )
   }
 
   return insights

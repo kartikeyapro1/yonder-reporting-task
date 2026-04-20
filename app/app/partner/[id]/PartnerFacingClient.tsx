@@ -373,15 +373,15 @@ export function PartnerFacingClient({ summary }: Props) {
                   viewport={{ once: true, margin: '-60px' }}
                   transition={{ duration: 1, ease }}
                 >
-                  {incrementalPositive ? '+' : ''}
-                  <CountUp to={Math.round(summary.incremental_spend)} from={0} duration={2.5} separator="," />
+                  {incrementalPositive ? '+£' : '-£'}
+                  <CountUp to={Math.abs(Math.round(summary.incremental_spend))} from={0} duration={2.5} separator="," />
                 </motion.p>
                 <AnimatedLine className="mt-2 !bg-coral" />
               </div>
               <p className="text-base text-ink-400 mt-5 max-w-sm mx-auto leading-relaxed">
                 {incrementalPositive
-                  ? 'additional spend when your rewards were active on Yonder compared to when they weren\'t'
-                  : 'difference in spend between active and inactive reward periods'}
+                  ? 'more spent per month on average when your rewards were live on Yonder vs. when they weren\'t'
+                  : 'difference in average monthly spend between active and inactive reward periods'}
               </p>
               {upliftPct > 0 && (
                 <motion.p

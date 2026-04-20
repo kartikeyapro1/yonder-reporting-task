@@ -2,11 +2,42 @@
  * partner-transaction-facts.ts
  *
  * Enriched transaction-level fact table for a given partner.
- * Joins clean transactions with:
- * - on/off Yonder status (from active periods config)
- * - new vs repeat classification (from first-seen logic)
- * - boost/time-based event flag (from experience_visited CSV)
- * - revenue contribution (from commercial model config)
+ * Joins clean transactions with four classification dimensions:
+ *
+ * 1. ON / OFF YONDER
+ *    A transaction is "on Yonder" if its settlement timestamp falls within any
+ *    active period for that partner (lib/config/partner-periods.ts).
+ *    Active periods are calendar-month windows [start_date, end_date) — half-open,
+ *    so a period covering January 2025 runs 2025-01-01 ≤ ts < 2025-02-01.
+ *    Revenue is only earned on on-Yonder transactions; off-Yonder transactions
+ *    still appear in spend metrics but contribute £0 revenue.
+ *
+ * 2. NEW vs REPEAT CUSTOMER
+ *    A user is classified as "new" on a transaction if ALL of:
+ *      a. Their first-ever settled transaction with this partner is on or after
+ *         the partner's baseline_date (pre-baseline users are always "repeat").
+ *      b. This transaction IS that first transaction (exact timestamp match).
+ *    Every subsequent transaction by the same user at the same partner is "repeat",
+ *    even within the same month.
+ *    Note: "new" is partner-scoped, not Yonder-membership-scoped. A user can be
+ *    "new to FRIVE" while being a long-standing Yonder member.
+ *
+ * 3. BOOST (time_based)
+ *    A transaction is boosted if experience_visited contains a row for that
+ *    transaction_id where:
+ *      - match_status = 'match'   (experience was successfully matched)
+ *      - status = 'redeemable'    (experience was eligible for redemption)
+ *      - boost_type = 'time_based' (a scheduled promotional window was active)
+ *    All three conditions must hold. Boost applies on top of the standard
+ *    commercial rate — it affects engagement metrics but does NOT change the
+ *    revenue calculation (revenue follows the CPA/% model regardless of boost).
+ *
+ * 4. REVENUE CONTRIBUTION
+ *    Only computed for on-Yonder transactions (off-Yonder → £0).
+ *    FRIVE (CPA model):   new tx → £20.00,  repeat tx → £12.50
+ *    Gopuff (% model):    new tx → 8% × spend,  repeat tx → 1% × spend
+ *    The applicable commercial model is resolved by effective_from date, so
+ *    rate changes mid-contract are handled automatically.
  */
 
 import { cache } from 'react'

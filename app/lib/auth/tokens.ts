@@ -15,7 +15,19 @@
 const EXPIRY_HOURS = 48
 
 function secret(): string {
-  return process.env.PARTNER_LINK_SECRET ?? 'yonder-dev-secret-CHANGE-ME-in-production'
+  const s = process.env.PARTNER_LINK_SECRET
+  if (!s) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'PARTNER_LINK_SECRET env var is required in production. ' +
+        'Generate with: openssl rand -base64 32'
+      )
+    }
+    // Dev-only fallback — magic links will verify correctly within a single
+    // dev session but tokens are not portable across restarts.
+    return 'yonder-dev-secret-CHANGE-ME-in-production'
+  }
+  return s
 }
 
 async function importKey(s: string): Promise<CryptoKey> {

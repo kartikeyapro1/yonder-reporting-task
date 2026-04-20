@@ -37,10 +37,14 @@ SELECT
     t.state,
     t.type                                                AS transaction_type
 FROM transactions t
--- Normalise merchant description to canonical partner name
+-- Normalise merchant description to canonical partner name.
+-- Uses UPPER(TRIM()) on both sides for case/whitespace-insensitive exact match.
+-- This mirrors the TypeScript pipeline's regex normalisation for all known variants
+-- enumerated in partner_name_mapping. For unknown variants or prefix-style patterns,
+-- upgrade to REGEXP_CONTAINS() as documented in 01_partner_name_mapping.sql.
 INNER JOIN partner_name_mapping m
   ON UPPER(TRIM(COALESCE(t.raw_merchant_description, t.merchant_description)))
-     = UPPER(TRIM(m.raw_description_pattern))
+     = m.raw_description_pattern
 WHERE
     t.state = 'settled'
 ;

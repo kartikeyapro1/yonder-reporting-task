@@ -2,16 +2,25 @@
  * partner-user-first-seen.ts
  *
  * Determines the first time each user transacted with each partner.
- * Used to classify new vs repeat customers.
+ * This is the foundation for new-vs-repeat customer classification.
  *
- * Assumption: "new" is determined per partner, not globally.
- * A user is "new to FRIVE" on their first settled transaction with FRIVE,
- * regardless of when they joined Yonder or visited other partners.
+ * RULES:
+ *   1. First-seen is per-partner, not global. A user can be "new to FRIVE"
+ *      and simultaneously "repeat at Gopuff".
+ *   2. Only settled transactions are considered (clean_transactions already
+ *      filters to state = 'settled').
+ *   3. Baseline gate: if a user's earliest transaction with a partner
+ *      pre-dates the partner's baseline_date, they are treated as an
+ *      existing customer for the entire reporting window — even if we only
+ *      observe them once. This prevents pre-existing loyalty from inflating
+ *      new-customer counts.
+ *   4. "New" applies only to the single transaction that IS the first seen.
+ *      Every subsequent transaction — even on the same day — is "repeat".
  *
- * Baseline date matters: for revenue calculation, we only call someone
- * "new" if their first observed transaction is on or after the partner's
- * baseline_date. If a user has pre-baseline history we treat them as
- * existing customers from day one of the reporting period.
+ * IMPLEMENTATION NOTE:
+ *   The map is built once per request from all clean transactions (across all
+ *   partners) so that calling getPartnerUserFirstSeen() for multiple partners
+ *   within the same server render does not re-scan the transaction list.
  */
 
 import { cache } from 'react'

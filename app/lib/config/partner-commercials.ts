@@ -4,12 +4,28 @@
  * Structured commercial model config per partner.
  * Revenue logic reads from here — no per-component hardcoding.
  *
- * FRIVE:  £20 CPA new, £12.50 CPA repeat
- * Gopuff: 8% of spend for new, 1% of spend for repeat
+ * Supported commercial models:
  *
- * Assumption: "new" = first transaction with this partner on Yonder within
- * the reporting window (after baseline date). All subsequent transactions
- * by the same user at this partner are "repeat".
+ * cpa_new_repeat  (FRIVE)
+ *   A fixed Cost Per Acquisition paid per settled, on-Yonder transaction.
+ *   cpa_new    = £20.00  → paid when a user's first visit to this partner is on/after baseline_date
+ *   cpa_repeat = £12.50  → paid for every subsequent settled visit by the same user
+ *   Revenue is earned per transaction, regardless of transaction amount.
+ *   Example: user visits FRIVE 3 times post-baseline → £20 + £12.50 + £12.50 = £45.00
+ *
+ * pct_spend_new_repeat  (Gopuff)
+ *   A percentage of transaction spend, with different rates for new vs repeat.
+ *   pct_new    = 8%  → 0.08 × trans_amount_gbp for first-visit transactions
+ *   pct_repeat = 1%  → 0.01 × trans_amount_gbp for returning-visit transactions
+ *   Revenue scales with spend, so a £50 first visit generates £4.00.
+ *   Example: £50 new visit + £30 repeat visit → £4.00 + £0.30 = £4.30
+ *
+ * Effective date: each CommercialModel entry has an effective_from date.
+ * getCommercialModel() picks the most recent model where effective_from ≤ txDate,
+ * enabling mid-contract rate changes without code deploys.
+ *
+ * Revenue is ONLY earned on on-Yonder transactions (is_on_yonder = true).
+ * Off-Yonder transactions appear in spend analytics but contribute £0 revenue.
  */
 
 import type { PartnerConfig, CommercialModel } from '@/lib/types'
