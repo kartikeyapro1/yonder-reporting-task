@@ -124,9 +124,9 @@ export function ReportPage({ summary, commercials }: Props) {
                 value: hasOnOff ? `${incrementalPositive ? '+' : ''}${fmt(summary.incremental_spend)}` : '—',
                 accent: incrementalPositive,
               },
-              { label: 'New customers', value: summary.new_users.toLocaleString(), accent: false },
+              { label: 'New Yonder members', value: summary.new_users.toLocaleString(), accent: false },
               { label: 'Avg. transaction value', value: fmt(avgSpend), accent: false },
-              { label: 'Unique customers', value: summary.unique_users.toLocaleString(), accent: false },
+              { label: 'Yonder members reached', value: summary.unique_users.toLocaleString(), accent: false },
             ].map((kpi) => (
               <StaggerItem key={kpi.label}>
                 <div className="bg-white/[0.06] rounded-xl px-4 py-3.5 border border-white/[0.08]">
@@ -237,10 +237,10 @@ export function ReportPage({ summary, commercials }: Props) {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
               {[
-                { label: 'New customers', value: summary.new_users.toLocaleString() },
+                { label: 'New Yonder members', value: summary.new_users.toLocaleString() },
                 { label: 'Repeat visit rate', value: `${Math.round(repeatRate)}%` },
-                { label: 'New customer spend', value: fmt(summary.new_spend_gbp) },
-                { label: 'Returning spend', value: fmt(summary.repeat_spend_gbp) },
+                { label: 'New member spend', value: fmt(summary.new_spend_gbp) },
+                { label: 'Returning member spend', value: fmt(summary.repeat_spend_gbp) },
               ].map(stat => (
                 <div key={stat.label} className="rounded-2xl border border-gray-200/60 bg-white px-4 py-3 shadow-card">
                   <p className="text-[11px] font-semibold text-ink-300 mb-1 uppercase tracking-caps">{stat.label}</p>
@@ -291,12 +291,12 @@ export function ReportPage({ summary, commercials }: Props) {
             </div>
 
             <div className="rounded-2xl border border-gray-200/60 bg-white p-5 shadow-card">
-              <DataRow label="Platform fee from new customers" value={fmt(summary.new_revenue)} highlight />
-              <DataRow label="Platform fee from returning customers" value={fmt(summary.repeat_revenue)} highlight />
+              <DataRow label="Yonder fee (new members)" value={fmt(summary.new_revenue)} highlight />
+              <DataRow label="Yonder fee (returning members)" value={fmt(summary.repeat_revenue)} highlight />
               {summary.boost_revenue > 0 && (
                 <DataRow label="Fee from time-boost periods" value={fmt(summary.boost_revenue)} highlight />
               )}
-              <DataRow label="Total platform fee" value={fmt(summary.total_revenue)} highlight large />
+              <DataRow label="Total Yonder fee" value={fmt(summary.total_revenue)} highlight large />
               <DataRow label="Effective fee rate" value={`${revenueMargin.toFixed(2)}% of settled spend`} />
             </div>
           </section>
@@ -363,7 +363,7 @@ export function ReportPage({ summary, commercials }: Props) {
             <h3 className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps mb-3">Methodology &amp; notes</h3>
             <div className="space-y-1.5 text-[11px] text-ink-300 leading-relaxed">
               <p>· Only settled transactions are included in revenue calculations.</p>
-              <p>· &quot;New customer&quot; is defined as a user whose first settled transaction with this partner falls on or after the baseline date.</p>
+              <p>· &quot;New member&quot; is defined as a Yonder member whose first settled transaction with this partner falls on or after the baseline date.</p>
               <p>· &quot;On Yonder&quot; periods cover full calendar months as defined in the partner active period configuration.</p>
               <p>· Incremental spend is the per-month normalised difference between avg. on-Yonder and avg. off-Yonder spend. No seasonality adjustment applied.</p>
               <p>· FX transactions are converted to GBP using the fx_rate field. Where absent, charged_amount (GBP) is used as fallback.</p>

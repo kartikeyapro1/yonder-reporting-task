@@ -78,10 +78,10 @@ export function InternalDashboardClient({ rows, totals }: Props) {
     .slice(0, 4)
 
   const stats = [
-    { label: 'Total spend', value: totals.totalSpend, prefix: '£' },
-    { label: 'Revenue', value: totals.totalRevenue, prefix: '£' },
-    { label: 'Transactions', value: totals.totalTx, prefix: '' },
-    { label: 'Unique users', value: totals.totalUsers, prefix: '' },
+    { label: 'Member spend', value: totals.totalSpend, prefix: '£' },
+    { label: 'Yonder fee earned', value: totals.totalRevenue, prefix: '£' },
+    { label: 'Settled transactions', value: totals.totalTx, prefix: '' },
+    { label: 'Yonder members', value: totals.totalUsers, prefix: '' },
   ]
 
   return (
@@ -155,11 +155,11 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                       </div>
                       <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
                         <div>
-                          <p className="text-[10px] text-ink-300 mb-0.5">Spend</p>
+                          <p className="text-[10px] text-ink-300 mb-0.5">Member spend</p>
                           <p className="text-xs font-semibold text-ink-800 font-tabular">{fmt(row.total_spend_gbp)}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-ink-300 mb-0.5">Revenue</p>
+                          <p className="text-[10px] text-ink-300 mb-0.5">Fee earned</p>
                           <p className="text-xs font-semibold text-positive font-tabular">{fmt(row.total_revenue)}</p>
                         </div>
                         <div>
@@ -214,13 +214,13 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                     Category<SortIcon active={sortKey === 'category'} dir={sortDir} />
                   </th>
                   <th onClick={() => toggleSort('total_spend_gbp')} role="columnheader" aria-sort={sortKey === 'total_spend_gbp' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_spend_gbp')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
-                    Spend<SortIcon active={sortKey === 'total_spend_gbp'} dir={sortDir} />
+                    Member spend<SortIcon active={sortKey === 'total_spend_gbp'} dir={sortDir} />
                   </th>
                   <th onClick={() => toggleSort('total_revenue')} role="columnheader" aria-sort={sortKey === 'total_revenue' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_revenue')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
-                    Fee earned<SortIcon active={sortKey === 'total_revenue'} dir={sortDir} />
+                    Yonder fee<SortIcon active={sortKey === 'total_revenue'} dir={sortDir} />
                   </th>
                   <th onClick={() => toggleSort('total_transactions')} role="columnheader" aria-sort={sortKey === 'total_transactions' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_transactions')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
-                    Txns<SortIcon active={sortKey === 'total_transactions'} dir={sortDir} />
+                    Settled txns<SortIcon active={sortKey === 'total_transactions'} dir={sortDir} />
                   </th>
                   <th onClick={() => toggleSort('unique_users')} role="columnheader" aria-sort={sortKey === 'unique_users' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('unique_users')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
                     Customers<SortIcon active={sortKey === 'unique_users'} dir={sortDir} />

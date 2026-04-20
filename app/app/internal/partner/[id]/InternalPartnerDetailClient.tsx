@@ -85,10 +85,10 @@ export function InternalPartnerDetailClient({ summary }: Props) {
 
       {/* KPI strip */}
       <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <StaggerItem><KpiCard label="Total Spend" value={fmt(summary.total_spend_gbp)} /></StaggerItem>
-        <StaggerItem><KpiCard label="Total Revenue" value={fmt(summary.total_revenue)} /></StaggerItem>
-        <StaggerItem><KpiCard label="Transactions" value={summary.total_transactions.toLocaleString()} /></StaggerItem>
-        <StaggerItem><KpiCard label="Unique Users" value={summary.unique_users.toLocaleString()} /></StaggerItem>
+        <StaggerItem><KpiCard label="Member spend" value={fmt(summary.total_spend_gbp)} /></StaggerItem>
+        <StaggerItem><KpiCard label="Yonder fee earned" value={fmt(summary.total_revenue)} /></StaggerItem>
+        <StaggerItem><KpiCard label="Settled transactions" value={summary.total_transactions.toLocaleString()} /></StaggerItem>
+        <StaggerItem><KpiCard label="Yonder members" value={summary.unique_users.toLocaleString()} /></StaggerItem>
       </StaggerList>
 
       {/* Incremental spend callout */}
@@ -107,20 +107,20 @@ export function InternalPartnerDetailClient({ summary }: Props) {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-ink-800 text-sm">Incremental spend when live on Yonder</p>
+              <p className="font-semibold text-ink-800 text-sm">Spend uplift — active Yonder months vs inactive</p>
               <div className="flex flex-wrap gap-8 mt-3 text-sm">
                 <div>
-                  <p className="text-[11px] text-ink-300 mb-0.5 uppercase tracking-caps">Avg. monthly (on)</p>
+                  <p className="text-[11px] text-ink-300 mb-0.5 uppercase tracking-caps">Avg / month (on Yonder)</p>
                   <p className="font-semibold text-ink-800 text-lg font-tabular">{fmt(summary.avg_monthly_on_spend)}</p>
                   <p className="text-[10px] text-ink-300">{summary.on_months_count} months</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-ink-300 mb-0.5 uppercase tracking-caps">Avg. monthly (off)</p>
+                  <p className="text-[11px] text-ink-300 mb-0.5 uppercase tracking-caps">Avg / month (off Yonder)</p>
                   <p className="font-semibold text-ink-800 text-lg font-tabular">{fmt(summary.avg_monthly_off_spend)}</p>
                   <p className="text-[10px] text-ink-300">{summary.off_months_count} months</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-ink-300 mb-0.5 uppercase tracking-caps">Per-month uplift</p>
+                  <p className="text-[11px] text-ink-300 mb-0.5 uppercase tracking-caps">Monthly uplift</p>
                   <p className={`font-bold font-tabular text-xl ${incrementalPositive ? 'text-coral' : 'text-negative'}`}>
                     {incrementalPositive ? '+' : ''}{fmt(summary.incremental_spend)}
                   </p>
