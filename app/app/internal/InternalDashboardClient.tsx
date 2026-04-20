@@ -199,15 +199,15 @@ export function InternalDashboardClient({ rows, totals }: Props) {
         </div>
 
         {/* ── Stats row ────────────────────────────────────── */}
-        <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-          {stats.map(s => (
-            <StaggerItem key={s.label}>
-              <div className="rounded-2xl border border-gray-200/80 bg-white px-5 py-5 shadow-card hover:shadow-float transition-shadow duration-400">
+        <FadeIn delay={0.15}>
+          <div className="flex divide-x divide-gray-100 border-y border-gray-100 mb-12 -mx-6 px-6">
+            {stats.map(s => (
+              <div key={s.label} className="flex-1 py-7 pr-8 last:pr-0 first:pl-0 pl-8">
                 <p
-                  className="text-xs font-medium text-ink-400 uppercase tracking-caps mb-2 cursor-help"
+                  className="text-[11px] font-medium text-ink-400 mb-1.5 cursor-help"
                   title={s.title}
                 >{s.label}</p>
-                <p className="text-2xl font-semibold text-ink-900 font-tabular">
+                <p className="text-[2rem] font-display font-semibold text-ink-900 leading-none font-tabular tracking-tight">
                   {s.prefix}
                   <CountUp
                     to={s.value >= 1_000_000 ? parseFloat((s.value / 1_000_000).toFixed(2)) : s.value >= 1000 ? parseFloat((s.value / 1000).toFixed(1)) : s.value}
@@ -217,43 +217,45 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                   {s.value >= 1_000_000 ? 'm' : s.value >= 1000 ? 'k' : ''}
                 </p>
               </div>
-            </StaggerItem>
-          ))}
-        </StaggerList>
+            ))}
+          </div>
+        </FadeIn>
 
         {/* ── Featured partners ────────────────────────────── */}
         {topPartners.length > 0 && (
           <FadeIn delay={0.2}>
             <div className="mb-10">
-              <p className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps mb-4">
-                Top partners by revenue
+              <p className="text-sm font-semibold text-ink-600 mb-4">
+                Top partners
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {topPartners.map(row => {
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {topPartners.map((row, i) => {
                   const slug = row.partner_name.toLowerCase().replace(/\s+/g, '-')
-                  const isUp = row.revenue_trend === 'up'
                   return (
                     <div
                       key={row.partner_name}
                       onClick={() => router.push(`/internal/partner/${slug}`)}
-                      className="group bg-white rounded-2xl border border-gray-200/80 p-5 cursor-pointer
-                        hover:shadow-float hover:border-coral/20 hover:-translate-y-0.5
-                        transition-all duration-400 ease-out-expo"
+                      className="group relative bg-white rounded-2xl border border-gray-100 p-5 cursor-pointer
+                        overflow-hidden hover:shadow-lg hover:-translate-y-0.5
+                        transition-all duration-300 ease-out"
                     >
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-xl bg-ink-900 flex items-center justify-center text-white font-semibold text-xs shrink-0">
-                          {row.display_name[0]}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-ink-800 group-hover:text-coral transition-colors duration-300">
+                      {/* Coral left accent — replaces generic letter avatar */}
+                      <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl bg-coral opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                      <div className="mb-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-base font-display font-semibold text-ink-800 group-hover:text-coral transition-colors duration-300 leading-tight">
                             {row.display_name}
                           </p>
-                          <p className="text-[11px] text-ink-300">{row.category}</p>
+                          <span className="text-[11px] text-ink-300 font-mono shrink-0 mt-0.5">
+                            {String(i + 1).padStart(2, '0')}
+                          </span>
                         </div>
+                        <p className="text-xs text-ink-300 mt-0.5">{row.category}</p>
                       </div>
-                      <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
+                      <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-50">
                         <div>
-                          <p className="text-[10px] text-ink-300 mb-0.5">Card spend</p>
+                          <p className="text-[10px] text-ink-300 mb-0.5">Spend</p>
                           <p className="text-xs font-semibold text-ink-800 font-tabular">{fmt(row.total_spend_gbp)}</p>
                         </div>
                         <div>
@@ -263,8 +265,8 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                         <div>
                           <p className="text-[10px] text-ink-300 mb-0.5">Status</p>
                           <p className={`text-xs font-semibold ${row.is_currently_active ? 'text-positive' : 'text-ink-300'}`}>
-                            <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 ${row.is_currently_active ? 'bg-positive' : 'bg-gray-300'}`} />
-                            {row.is_currently_active ? 'Active' : 'Inactive'}
+                            <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${row.is_currently_active ? 'bg-positive' : 'bg-gray-300'}`} />
+                            {row.is_currently_active ? 'Active' : 'Off'}
                           </p>
                         </div>
                       </div>
@@ -316,29 +318,29 @@ export function InternalDashboardClient({ rows, totals }: Props) {
 
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-sand-50/80">
-                  <th onClick={() => toggleSort('display_name')} role="columnheader" aria-sort={sortKey === 'display_name' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('display_name')} className="group/th text-left px-6 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                <tr className="border-b border-gray-100">
+                  <th onClick={() => toggleSort('display_name')} role="columnheader" aria-sort={sortKey === 'display_name' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('display_name')} className="group/th text-left px-6 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors">
                     Partner<SortIcon active={sortKey === 'display_name'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('category')} role="columnheader" aria-sort={sortKey === 'category' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('category')} className="group/th text-left px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                  <th onClick={() => toggleSort('category')} role="columnheader" aria-sort={sortKey === 'category' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('category')} className="group/th text-left px-4 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors">
                     Category<SortIcon active={sortKey === 'category'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('total_spend_gbp')} role="columnheader" aria-sort={sortKey === 'total_spend_gbp' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_spend_gbp')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                  <th onClick={() => toggleSort('total_spend_gbp')} role="columnheader" aria-sort={sortKey === 'total_spend_gbp' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_spend_gbp')} className="group/th text-right px-4 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors">
                     Card spend<SortIcon active={sortKey === 'total_spend_gbp'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('total_revenue')} role="columnheader" aria-sort={sortKey === 'total_revenue' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_revenue')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors" title="Yonder's commission from this partner">
+                  <th onClick={() => toggleSort('total_revenue')} role="columnheader" aria-sort={sortKey === 'total_revenue' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_revenue')} className="group/th text-right px-4 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors" title="Yonder's commission from this partner">
                     Commission<SortIcon active={sortKey === 'total_revenue'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('total_transactions')} role="columnheader" aria-sort={sortKey === 'total_transactions' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_transactions')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors" title="Number of settled transactions">
+                  <th onClick={() => toggleSort('total_transactions')} role="columnheader" aria-sort={sortKey === 'total_transactions' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('total_transactions')} className="group/th text-right px-4 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors" title="Number of settled transactions">
                     Visits<SortIcon active={sortKey === 'total_transactions'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('unique_users')} role="columnheader" aria-sort={sortKey === 'unique_users' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('unique_users')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors" title="Unique Yonder cardholders who visited">
+                  <th onClick={() => toggleSort('unique_users')} role="columnheader" aria-sort={sortKey === 'unique_users' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('unique_users')} className="group/th text-right px-4 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors" title="Unique Yonder cardholders who visited">
                     Members<SortIcon active={sortKey === 'unique_users'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('last_active_month')} role="columnheader" aria-sort={sortKey === 'last_active_month' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('last_active_month')} className="group/th text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                  <th onClick={() => toggleSort('last_active_month')} role="columnheader" aria-sort={sortKey === 'last_active_month' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('last_active_month')} className="group/th text-right px-4 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors">
                     Last active<SortIcon active={sortKey === 'last_active_month'} dir={sortDir} />
                   </th>
-                  <th onClick={() => toggleSort('is_currently_active')} role="columnheader" aria-sort={sortKey === 'is_currently_active' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('is_currently_active')} className="group/th text-center px-6 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps cursor-pointer select-none hover:text-ink-600 transition-colors">
+                  <th onClick={() => toggleSort('is_currently_active')} role="columnheader" aria-sort={sortKey === 'is_currently_active' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('is_currently_active')} className="group/th text-center px-6 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors">
                     Status<SortIcon active={sortKey === 'is_currently_active'} dir={sortDir} />
                   </th>
                 </tr>

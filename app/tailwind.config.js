@@ -25,9 +25,9 @@ module.exports = {
         'fluid-hero': 'clamp(3rem,    2rem + 5vw,         6rem)',
       },
       letterSpacing: {
-        'display': '-0.035em',
-        'heading': '-0.025em',
-        'caps':     '0.12em',
+        'display': '-0.02em',
+        'heading': '-0.015em',
+        'caps':     '0.1em',
       },
 
       /* ── Colour system ──────────────────────────────────────── */

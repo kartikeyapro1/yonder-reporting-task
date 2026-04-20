@@ -5,7 +5,7 @@ import { NewVsExistingChart } from '@/components/charts/NewVsExistingChart'
 import { OnOffComparisonChart } from '@/components/charts/OnOffComparisonChart'
 import { Download } from 'lucide-react'
 import { YonderLogo } from '@/components/brand/YonderLogo'
-import { FadeIn, StaggerList, StaggerItem } from '@/components/motion'
+import { FadeIn } from '@/components/motion'
 import type { PartnerSummaryMetrics, CommercialModel } from '@/lib/types'
 
 interface Props {
@@ -43,8 +43,8 @@ function describeModel(model: CommercialModel): string {
 function SectionHeader({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="mb-5">
-      <h2 className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps">{title}</h2>
-      {sub && <p className="text-[11px] text-ink-300 mt-1">{sub}</p>}
+      <h2 className="text-xs font-semibold text-ink-900">{title}</h2>
+      {sub && <p className="text-xs text-ink-400 mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -106,7 +106,7 @@ export function ReportPage({ summary, commercials }: Props) {
             <div>
               <div className="flex items-center gap-3 mb-5">
                 <YonderLogo variant="light" size="sm" showWordmark={false} />
-                <span className="text-white/40 text-[11px] font-semibold uppercase tracking-caps">Yonder · Partner Report</span>
+                <span className="text-white/40 text-xs font-medium">Yonder · Partner Report</span>
               </div>
               <h1 className="text-3xl font-display font-semibold tracking-display text-white">{summary.display_name}</h1>
               <p className="text-white/35 mt-1.5 text-sm">{summary.period_label}</p>
@@ -117,8 +117,8 @@ export function ReportPage({ summary, commercials }: Props) {
             </div>
           </div>
 
-          {/* Hero KPIs */}
-          <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Hero KPIs — editorial strip matching yonder.com partner stats */}
+          <div className="flex divide-x divide-white/10 mt-8 pt-8 border-t border-white/10">
             {[
               {
                 label: 'Per-month uplift',
@@ -126,17 +126,15 @@ export function ReportPage({ summary, commercials }: Props) {
                 accent: incrementalPositive,
               },
               { label: 'New Yonder members', value: summary.new_users.toLocaleString(), accent: false },
-              { label: 'Avg. transaction value', value: fmt(avgSpend), accent: false },
-              { label: 'Yonder members reached', value: summary.unique_users.toLocaleString(), accent: false },
+              { label: 'Avg. transaction', value: fmt(avgSpend), accent: false },
+              { label: 'Members reached', value: summary.unique_users.toLocaleString(), accent: false },
             ].map((kpi) => (
-              <StaggerItem key={kpi.label}>
-                <div className="bg-white/[0.06] rounded-xl px-4 py-3.5 border border-white/[0.08]">
-                  <p className="text-white/35 text-[11px] font-semibold mb-1.5 tracking-caps uppercase">{kpi.label}</p>
-                  <p className={`text-lg font-semibold font-tabular tracking-tight ${kpi.accent ? 'text-coral-light' : 'text-white'}`}>{kpi.value}</p>
-                </div>
-              </StaggerItem>
+              <div key={kpi.label} className="flex-1 px-6 first:pl-0 last:pr-0">
+                <p className="text-white/35 text-[11px] mb-2">{kpi.label}</p>
+                <p className={`text-2xl font-display font-semibold tracking-tight font-tabular ${kpi.accent ? 'text-coral-300' : 'text-white'}`}>{kpi.value}</p>
+              </div>
             ))}
-          </StaggerList>
+          </div>
         </div>
       </div>
 
@@ -176,7 +174,7 @@ export function ReportPage({ summary, commercials }: Props) {
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-40" />
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-coral" />
                     </span>
-                    <p className="text-[11px] font-semibold text-coral uppercase tracking-caps">On Yonder</p>
+                    <p className="text-[11px] font-semibold text-coral">On Yonder</p>
                   </div>
                   <p className="text-xl font-semibold text-ink-900 font-tabular">{fmt(summary.avg_monthly_on_spend)}</p>
                   <p className="text-xs text-ink-400 mt-1">avg. monthly spend · {activeMonthCount} {activeMonthCount === 1 ? 'month' : 'months'}</p>
@@ -184,7 +182,7 @@ export function ReportPage({ summary, commercials }: Props) {
                 <div className="rounded-2xl border border-sand-200 bg-sand-100 px-5 py-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 rounded-full bg-ink-200 shrink-0" />
-                    <p className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps">Off Yonder</p>
+                    <p className="text-[11px] font-semibold text-ink-300">Off Yonder</p>
                   </div>
                   <p className="text-xl font-semibold text-ink-900 font-tabular">{fmt(summary.avg_monthly_off_spend)}</p>
                   <p className="text-xs text-ink-300 mt-1">

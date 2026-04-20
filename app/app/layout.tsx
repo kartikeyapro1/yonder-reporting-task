@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, DM_Serif_Display } from 'next/font/google'
+import { Inter, Syne } from 'next/font/google'
 import { Toaster } from 'sonner'
 import './globals.css'
 
@@ -9,9 +9,9 @@ const inter = Inter({
   display: 'swap',
 })
 
-const dmSerif = DM_Serif_Display({
-  weight: '400',
+const syne = Syne({
   subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
   variable: '--font-display',
   display: 'swap',
 })
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${dmSerif.variable}`}>
+    <html lang="en" className={`${inter.variable} ${syne.variable}`}>
       <body>
         {children}
         <Toaster

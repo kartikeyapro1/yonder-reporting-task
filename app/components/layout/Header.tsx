@@ -36,9 +36,7 @@ export function Header({ section, partnerName, partnerSlug }: HeaderProps) {
               >
                 Config
               </Link>
-              <span className="text-[10px] font-semibold text-ink-400 uppercase tracking-caps bg-ink-50 px-2.5 py-1 rounded-full">
-                Internal
-              </span>
+              <span className="hidden sm:block text-xs text-ink-200">Internal</span>
             </>
           )}
           {section === 'partner' && partnerSlug && (

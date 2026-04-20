@@ -9,12 +9,12 @@ interface KpiCardProps {
 
 export function KpiCard({ label, value, sub, trend }: KpiCardProps) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
-      <p className="text-xs font-medium text-gray-500 mb-2">{label}</p>
+    <div className="py-4">
+      <p className="text-[11px] font-medium text-ink-400 mb-2 leading-none">{label}</p>
       <div className="flex items-end justify-between gap-2">
-        <p className="text-2xl font-semibold text-gray-900 font-tabular tracking-tight">{value}</p>
+        <p className="text-[1.65rem] font-display font-semibold text-ink-900 font-tabular leading-none tracking-tight">{value}</p>
         {trend && trend !== 'flat' && (
-          <span className={`flex items-center ${
+          <span className={`flex items-center mb-0.5 ${
             trend === 'up' ? 'text-positive' : 'text-negative'
           }`}>
             {trend === 'up'
@@ -23,7 +23,7 @@ export function KpiCard({ label, value, sub, trend }: KpiCardProps) {
           </span>
         )}
       </div>
-      {sub && <p className="text-xs text-gray-400 mt-1.5">{sub}</p>}
+      {sub && <p className="text-[11px] text-ink-300 mt-1.5">{sub}</p>}
     </div>
   )
 }

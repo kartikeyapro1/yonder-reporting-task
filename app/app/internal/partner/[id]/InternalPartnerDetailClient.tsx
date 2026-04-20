@@ -209,44 +209,48 @@ export function InternalPartnerDetailClient({ summary }: Props) {
       )}
 
       {/* KPI strip */}
-      <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-        <StaggerItem><KpiCard label="Member spend" value={fmt(isFiltered ? rangeSpend : summary.total_spend_gbp)} sub={isFiltered ? 'selected range' : undefined} /></StaggerItem>
-        <StaggerItem><KpiCard label="Commission" value={fmt(isFiltered ? rangeRevenue : summary.total_revenue)} sub={isFiltered ? 'selected range' : undefined} /></StaggerItem>
-        <StaggerItem><KpiCard label="Visits" value={(isFiltered ? rangeTx : summary.total_transactions).toLocaleString()} sub={isFiltered ? 'selected range' : undefined} /></StaggerItem>
-        <StaggerItem><KpiCard label="Members" value={(isFiltered ? rangeUsers : summary.unique_users).toLocaleString()} sub={isFiltered ? 'selected range' : undefined} /></StaggerItem>
-      </StaggerList>
+      <FadeIn delay={0.1}>
+        <div className="flex divide-x divide-gray-100 border-y border-gray-100 mb-6">
+          <div className="flex-1 px-6 py-5 first:pl-0">
+            <KpiCard label="Member spend" value={fmt(isFiltered ? rangeSpend : summary.total_spend_gbp)} sub={isFiltered ? 'selected range' : undefined} />
+          </div>
+          <div className="flex-1 px-6 py-5">
+            <KpiCard label="Commission" value={fmt(isFiltered ? rangeRevenue : summary.total_revenue)} sub={isFiltered ? 'selected range' : undefined} />
+          </div>
+          <div className="flex-1 px-6 py-5">
+            <KpiCard label="Visits" value={(isFiltered ? rangeTx : summary.total_transactions).toLocaleString()} sub={isFiltered ? 'selected range' : undefined} />
+          </div>
+          <div className="flex-1 px-6 py-5 last:pr-0">
+            <KpiCard label="Members" value={(isFiltered ? rangeUsers : summary.unique_users).toLocaleString()} sub={isFiltered ? 'selected range' : undefined} />
+          </div>
+        </div>
+      </FadeIn>
 
       {/* Secondary KPI strip */}
-      <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <StaggerItem>
+      <FadeIn delay={0.15}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-5 border-b border-gray-100 mb-8 pb-6">
           <KpiCard
             label="Points earned"
             value={(summary.total_points_earned ?? 0).toLocaleString()}
             sub="by Yonder cardholders"
           />
-        </StaggerItem>
-        <StaggerItem>
           <KpiCard
             label="Experience engagement"
             value={`${((summary.experience_engagement_rate ?? 0) * 100).toFixed(0)}%`}
             sub={`${summary.experience_matched_transactions ?? 0} visits triggered reward`}
           />
-        </StaggerItem>
-        <StaggerItem>
           <KpiCard
             label="New members"
             value={summary.new_users.toLocaleString()}
             sub={`${((summary.new_transactions / summary.total_transactions) * 100).toFixed(0)}% of visits`}
           />
-        </StaggerItem>
-        <StaggerItem>
           <KpiCard
             label="Denied experiences"
             value={(summary.denied_experience_transactions ?? 0).toLocaleString()}
             sub="card not linked"
           />
-        </StaggerItem>
-      </StaggerList>
+        </div>
+      </FadeIn>
 
       {/* Incremental spend callout */}
       {hasOnOff && (
