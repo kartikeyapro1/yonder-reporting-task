@@ -39,6 +39,8 @@ export function InternalPartnerDetailClient({ summary }: Props) {
   const incrementalPositive = summary.incremental_spend > 0
   const newPct = pct(summary.new_transactions, summary.total_transactions)
 
+  const slug = summary.partner_name.toLowerCase().replace(/\s+/g, '-')
+
   return (
     <main className="max-w-screen-xl mx-auto px-6 py-8">
 
@@ -55,6 +57,14 @@ export function InternalPartnerDetailClient({ summary }: Props) {
             <p className="text-sm text-ink-400 mt-1">{summary.period_label}</p>
           </div>
           <div className="flex gap-2.5">
+            <a
+              href={`/api/partners/${slug}/export?format=html`}
+              download
+              className="text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200/80 bg-white hover:bg-sand-50
+                hover:border-coral/20 transition-all duration-300 text-ink-600"
+            >
+              ↓ Export
+            </a>
             <Link
               href={`/partner/${token}`}
               className="text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200/80 bg-white hover:bg-sand-50

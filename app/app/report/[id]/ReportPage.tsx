@@ -57,6 +57,8 @@ function DataRow({ label, value, highlight, large }: { label: string; value: str
   )
 }
 
+import Link from 'next/link'
+
 export function ReportPage({ summary, commercials }: Props) {
   const now = new Date()
   const generatedAt = now.toLocaleDateString('en-GB', {
@@ -80,12 +82,24 @@ export function ReportPage({ summary, commercials }: Props) {
   const activeMonthCount = summary.on_months_count
   const inactiveMonthCount = summary.off_months_count
 
+  // Partner-facing download link (uses slug, but token is available in URL param)
+  const slug = summary.partner_name.toLowerCase().replace(/\s+/g, '-')
+
   return (
     <div className="min-h-screen bg-sand-50 print:bg-white">
 
       {/* ── Report header ─────────────────────────────────────────── */}
       <div className="bg-ink-950 text-white print:bg-ink-950">
         <div className="max-w-3xl mx-auto px-8 py-12">
+          <div className="flex justify-end mb-4">
+            <a
+              href={`/api/partners/${slug}/export?format=html`}
+              download
+              className="inline-block text-xs font-medium px-3 py-2 rounded-lg border border-white/20 bg-white/10 hover:bg-coral hover:text-white hover:border-coral transition-all duration-200"
+            >
+              ↓ Download report
+            </a>
+          </div>
 
           <div className="flex items-start justify-between mb-8">
             <div>

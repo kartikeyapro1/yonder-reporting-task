@@ -28,9 +28,17 @@ export function Header({ section, partnerName, partnerSlug }: HeaderProps) {
 
         <div className="flex items-center gap-4">
           {section === 'internal' && (
-            <span className="text-[10px] font-semibold text-ink-400 uppercase tracking-caps bg-ink-50 px-2.5 py-1 rounded-full">
-              Internal
-            </span>
+            <>
+              <Link
+                href="/internal/admin"
+                className="text-xs font-medium text-ink-400 hover:text-coral transition-colors duration-300"
+              >
+                Config
+              </Link>
+              <span className="text-[10px] font-semibold text-ink-400 uppercase tracking-caps bg-ink-50 px-2.5 py-1 rounded-full">
+                Internal
+              </span>
+            </>
           )}
           {section === 'partner' && partnerSlug && (
             <Link

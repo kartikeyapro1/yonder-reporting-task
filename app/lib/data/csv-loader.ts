@@ -1,42 +1,21 @@
 /**
  * csv-loader.ts
  *
- * Server-side CSV loading utilities.
- * Reads from the /data directory at the workspace root (one level above /app).
- * Uses Node.js fs — only call these from Server Components or API routes.
+ * Thin facade over the DataSource interface.
+ * All downstream reporting modules import from here — they don't need to
+ * know whether data comes from CSV files, BigQuery, or any other store.
+ *
+ * The active backend is controlled by the DATA_SOURCE env var.
+ * See data-source.ts for the full interface.
  */
 
-import fs from 'fs'
-import path from 'path'
-import Papa from 'papaparse'
+import { getDataSource } from '@/lib/data/data-source'
 import type { RawTransaction, RawExperienceVisited } from '@/lib/types'
 
-// The data directory lives at ../data relative to /app
-const DATA_DIR = path.join(process.cwd(), '..', 'data')
-
-function readCsv<T>(filename: string): T[] {
-  const filePath = path.join(DATA_DIR, filename)
-  const content = fs.readFileSync(filePath, 'utf-8')
-  const result = Papa.parse<T>(content, {
-    header: true,
-    skipEmptyLines: true,
-  })
-  return result.data
-}
-
-let _transactions: RawTransaction[] | null = null
-let _experiences: RawExperienceVisited[] | null = null
-
 export function loadRawTransactions(): RawTransaction[] {
-  if (!_transactions) {
-    _transactions = readCsv<RawTransaction>('Synthetic - transaction_new.csv')
-  }
-  return _transactions
+  return getDataSource().loadTransactions()
 }
 
 export function loadRawExperiences(): RawExperienceVisited[] {
-  if (!_experiences) {
-    _experiences = readCsv<RawExperienceVisited>('Synthetic - experience_visited.csv')
-  }
-  return _experiences
+  return getDataSource().loadExperiences()
 }

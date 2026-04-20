@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "trailingSlash": false,
+  "routes": [
+    {
+      "src": "/api/cron/reports",
+      "dest": "/api/cron/reports"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/reports",
+      "schedule": "0 8 2 * *"  // 8am UTC, 2nd of every month
+    }
+  ]
+}
