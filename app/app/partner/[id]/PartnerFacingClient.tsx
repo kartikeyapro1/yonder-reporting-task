@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import { SpendTrendChart } from '@/components/charts/SpendTrendChart'
 import { NewVsExistingChart } from '@/components/charts/NewVsExistingChart'
 import { InsightCard } from '@/components/ui/InsightCard'
+import CountUp from '@/components/ui/CountUp'
+import BlurText from '@/components/ui/BlurText'
 import type { PartnerSummaryMetrics } from '@/lib/types'
 
 interface Props {
@@ -21,11 +23,19 @@ function MetricTile({
   label,
   value,
   sub,
+  countTo,
+  prefix = '',
+  suffix = '',
+  separator = '',
   delay = 0,
 }: {
   label: string
   value: string
   sub?: string
+  countTo?: number
+  prefix?: string
+  suffix?: string
+  separator?: string
   delay?: number
 }) {
   return (
@@ -37,7 +47,13 @@ function MetricTile({
       className="p-6 bg-white rounded-2xl border border-surface-border shadow-card-sm hover:shadow-card transition-all duration-300"
     >
       <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-tertiary mb-2.5">{label}</p>
-      <p className="text-3xl font-bold text-ink tracking-tight">{value}</p>
+      <p className="text-3xl font-bold text-ink tracking-tight">
+        {countTo !== undefined ? (
+          <>{prefix}<CountUp to={countTo} duration={2} delay={delay} separator={separator} />{suffix}</>
+        ) : (
+          value
+        )}
+      </p>
       {sub && <p className="text-xs text-ink-secondary mt-1.5">{sub}</p>}
     </motion.div>
   )
@@ -71,7 +87,7 @@ export function PartnerFacingClient({ summary }: Props) {
             </div>
             <div>
               <p className="text-[11px] text-ink-tertiary font-semibold uppercase tracking-[0.12em]">Yonder Partner Report</p>
-              <h1 className="text-xl font-bold text-ink tracking-tight">{summary.display_name}</h1>
+              <BlurText text={summary.display_name} className="text-xl font-bold text-ink tracking-tight" animateBy="words" direction="top" delay={80} stepDuration={0.3} />
             </div>
           </div>
           <p className="text-ink-secondary text-sm">{summary.period_label}</p>
@@ -84,8 +100,8 @@ export function PartnerFacingClient({ summary }: Props) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14">
           <MetricTile label="Total Spend" value={fmt(summary.total_spend_gbp)} delay={0.05} />
           <MetricTile label="Yonder fee" value={fmt(summary.total_revenue)} sub="platform revenue" delay={0.1} />
-          <MetricTile label="Transactions" value={summary.total_transactions.toLocaleString()} delay={0.15} />
-          <MetricTile label="Customers Reached" value={summary.unique_users.toLocaleString()} delay={0.2} />
+          <MetricTile label="Transactions" value={summary.total_transactions.toLocaleString()} countTo={summary.total_transactions} separator="," delay={0.15} />
+          <MetricTile label="Customers Reached" value={summary.unique_users.toLocaleString()} countTo={summary.unique_users} separator="," delay={0.2} />
         </div>
 
         {/* Performance at a glance */}
@@ -113,7 +129,7 @@ export function PartnerFacingClient({ summary }: Props) {
               className="bg-gradient-to-br from-accent-green/[0.04] to-white rounded-2xl border border-accent-green/15 p-6 transition-shadow duration-300 hover:shadow-card"
             >
               <p className="text-[10px] uppercase tracking-[0.1em] font-bold text-accent-emerald mb-2.5">Repeat Rate</p>
-              <p className="text-2xl font-bold text-ink">{repeatRate.toFixed(0)}%</p>
+              <p className="text-2xl font-bold text-ink"><CountUp to={Math.round(repeatRate)} duration={2} />%</p>
               <p className="text-xs text-ink-tertiary mt-1.5">of visits are returning customers</p>
             </motion.div>
             {summary.boost_transactions > 0 && (

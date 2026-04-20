@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Badge } from '@/components/ui/Badge'
+import CountUp from '@/components/ui/CountUp'
+import BlurText from '@/components/ui/BlurText'
 import type { InternalDashboardRow } from '@/lib/types'
 
 interface Props {
@@ -30,7 +32,23 @@ function fmtMonth(ym: string) {
 }
 
 /** Animated stat for the hero area */
-function HeroStat({ label, value, delay }: { label: string; value: string; delay: number }) {
+function HeroStat({
+  label,
+  value,
+  countTo,
+  prefix = '',
+  suffix = '',
+  separator = '',
+  delay,
+}: {
+  label: string
+  value: string
+  countTo?: number
+  prefix?: string
+  suffix?: string
+  separator?: string
+  delay: number
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -38,7 +56,17 @@ function HeroStat({ label, value, delay }: { label: string; value: string; delay
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay }}
       className="text-center"
     >
-      <p className="text-3xl md:text-4xl font-bold text-white font-tabular tracking-tight">{value}</p>
+      <p className="text-3xl md:text-4xl font-bold text-white font-tabular tracking-tight">
+        {countTo !== undefined ? (
+          <>
+            {prefix}
+            <CountUp to={countTo} duration={2} delay={delay} separator={separator} />
+            {suffix}
+          </>
+        ) : (
+          value
+        )}
+      </p>
       <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/30 mt-2">{label}</p>
     </motion.div>
   )
@@ -130,17 +158,22 @@ export function InternalDashboardClient({ rows, totals }: Props) {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="mb-10"
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-              Partner Analytics
-            </h1>
+            <BlurText
+              text="Partner Analytics"
+              className="text-3xl md:text-4xl font-bold text-white tracking-tight"
+              animateBy="words"
+              direction="top"
+              delay={120}
+              stepDuration={0.4}
+            />
           </motion.div>
 
           {/* Hero stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             <HeroStat label="Total Spend" value={fmt(totals.totalSpend)} delay={0.1} />
             <HeroStat label="Revenue" value={fmt(totals.totalRevenue)} delay={0.15} />
-            <HeroStat label="Transactions" value={totals.totalTx.toLocaleString()} delay={0.2} />
-            <HeroStat label="Unique Users" value={totals.totalUsers.toLocaleString()} delay={0.25} />
+            <HeroStat label="Transactions" value={totals.totalTx.toLocaleString()} countTo={totals.totalTx} separator="," delay={0.2} />
+            <HeroStat label="Unique Users" value={totals.totalUsers.toLocaleString()} countTo={totals.totalUsers} separator="," delay={0.25} />
           </div>
 
           {/* Active / Total indicator */}
