@@ -29,6 +29,35 @@ function fmt(n: number) {
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1]
 
+/* ── Inline sparkline ────────────────────────────────────────── */
+
+function Sparkline({ values, positive = true, w = 72, h = 24 }: {
+  values: number[]
+  positive?: boolean
+  w?: number
+  h?: number
+}) {
+  if (values.length < 2) return null
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const pad = 3
+  const pts = values.map((v, i) => [
+    (i / (values.length - 1)) * w,
+    h - pad - ((v - min) / range) * (h - pad * 2),
+  ])
+  const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')
+  const isUp = values[values.length - 1] >= values[0]
+  const stroke = isUp ? (positive ? '#E8503A' : '#A8A8A3') : '#A8A8A3'
+  const [lx, ly] = pts[pts.length - 1]
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden className="overflow-visible">
+      <path d={d} fill="none" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity={0.55} />
+      <circle cx={lx.toFixed(1)} cy={ly.toFixed(1)} r="2" fill={stroke} opacity={0.8} />
+    </svg>
+  )
+}
+
 /* ── Section progress dot ────────────────────────────────────── */
 
 function SectionDot({ active }: { active: boolean }) {
@@ -222,6 +251,9 @@ export function PartnerFacingClient({ summary }: Props) {
                 </p>
                 <p className="text-sm font-medium text-ink-600 mb-1">Total customer spend</p>
                 <p className="text-xs text-ink-300 leading-relaxed">from Yonder members at your venue</p>
+                <div className="mt-3 flex justify-center opacity-70">
+                  <Sparkline values={summary.monthly_breakdown.map(m => m.total_spend_gbp)} />
+                </div>
               </FloatCard>
             </StaggerItem>
             <StaggerItem>
@@ -231,6 +263,9 @@ export function PartnerFacingClient({ summary }: Props) {
                 </p>
                 <p className="text-sm font-medium text-ink-600 mb-1">New customers</p>
                 <p className="text-xs text-ink-300 leading-relaxed">visited for the first time via Yonder</p>
+                <div className="mt-3 flex justify-center opacity-70">
+                  <Sparkline values={summary.monthly_breakdown.map(m => m.new_users)} />
+                </div>
               </FloatCard>
             </StaggerItem>
             <StaggerItem>
@@ -240,6 +275,9 @@ export function PartnerFacingClient({ summary }: Props) {
                 </p>
                 <p className="text-sm font-medium text-ink-600 mb-1">Total visits</p>
                 <p className="text-xs text-ink-300 leading-relaxed">avg. {fmt(avgTxn)} per transaction</p>
+                <div className="mt-3 flex justify-center opacity-70">
+                  <Sparkline values={summary.monthly_breakdown.map(m => m.settled_transactions)} />
+                </div>
               </FloatCard>
             </StaggerItem>
             <StaggerItem>
@@ -249,6 +287,11 @@ export function PartnerFacingClient({ summary }: Props) {
                 </p>
                 <p className="text-sm font-medium text-ink-600 mb-1">Came back again</p>
                 <p className="text-xs text-ink-300 leading-relaxed">of all visits were returning customers</p>
+                <div className="mt-3 flex justify-center opacity-70">
+                  <Sparkline values={summary.monthly_breakdown.map(m =>
+                    m.total_transactions > 0 ? (m.repeat_transactions / m.total_transactions) * 100 : 0
+                  )} />
+                </div>
               </FloatCard>
             </StaggerItem>
           </StaggerList>
@@ -365,6 +408,16 @@ export function PartnerFacingClient({ summary }: Props) {
                 </div>
                 <p className="text-2xl md:text-3xl font-semibold text-ink-900 font-tabular tracking-tight">{fmt(summary.avg_monthly_on_spend)}</p>
                 <p className="text-xs text-ink-400 mt-1.5">avg. monthly spend · {activeMonthCount} months</p>
+                {/* Proportional bar */}
+                <div className="mt-4 h-1 rounded-full bg-coral-100">
+                  <motion.div
+                    className="h-full rounded-full bg-coral"
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${Math.min(100, (summary.avg_monthly_on_spend / Math.max(summary.avg_monthly_on_spend, summary.avg_monthly_off_spend, 1)) * 100).toFixed(1)}%` }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+                  />
+                </div>
               </FloatCard>
               <FloatCard delay={0.08} className="rounded-2xl bg-sand-100 border border-sand-200 px-6 py-6">
                 <div className="flex items-center gap-2 mb-3">
@@ -373,6 +426,16 @@ export function PartnerFacingClient({ summary }: Props) {
                 </div>
                 <p className="text-2xl md:text-3xl font-semibold text-ink-900 font-tabular tracking-tight">{fmt(summary.avg_monthly_off_spend)}</p>
                 <p className="text-xs text-ink-300 mt-1.5">avg. monthly spend · {inactiveMonthCount} months</p>
+                {/* Proportional bar */}
+                <div className="mt-4 h-1 rounded-full bg-sand-200">
+                  <motion.div
+                    className="h-full rounded-full bg-ink-300"
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${Math.min(100, (summary.avg_monthly_off_spend / Math.max(summary.avg_monthly_on_spend, summary.avg_monthly_off_spend, 1)) * 100).toFixed(1)}%` }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.45 }}
+                  />
+                </div>
               </FloatCard>
             </div>
 

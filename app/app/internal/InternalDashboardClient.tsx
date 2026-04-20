@@ -6,7 +6,7 @@ import {
   ArrowUp, ArrowDown, ChevronsUpDown,
   TrendingUp, TrendingDown,
   ChevronLeft, ChevronRight,
-  Download,
+  Download, X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import BlurText from '@/components/ui/BlurText'
@@ -298,20 +298,29 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                   <Download className="w-3.5 h-3.5" />
                 </button>
                 <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  ref={searchRef}
-                  type="text"
-                  placeholder="Search…  /"
-                  value={search}
-                  onChange={e => handleSearch(e.target.value)}
-                  aria-label="Search partners"
-                  className="w-52 text-sm pl-9 pr-3 py-2 rounded-xl border border-gray-200 bg-sand-50
-                    outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/30
-                    transition-all duration-300 placeholder:text-gray-400"
-                />
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    placeholder="Search…  /"
+                    value={search}
+                    onChange={e => handleSearch(e.target.value)}
+                    aria-label="Search partners"
+                    className="w-52 text-sm pl-9 pr-8 py-2 rounded-xl border border-gray-200 bg-sand-50
+                      outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/30
+                      transition-all duration-300 placeholder:text-gray-400"
+                  />
+                  {search && (
+                    <button
+                      onClick={() => { handleSearch(''); searchRef.current?.focus() }}
+                      aria-label="Clear search"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-300 hover:text-ink-600 transition-colors duration-200"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
