@@ -20,8 +20,8 @@ if (fConfig && fSummary) {
 
   console.log('Total facts (all time):', fFacts.length)
   console.log('Post-baseline settled:', settled.length)
-  console.log('On-Yonder txns:', onFacts.length, '| Off-Yonder:', offFacts.length)
-  console.log('New txns:', settled.filter(f => f.is_new_customer).length)
+  console.log('On-Yonder transactions:', onFacts.length, '| Off-Yonder:', offFacts.length)
+  console.log('New transactions:', settled.filter(f => f.is_new_customer).length)
   console.log('')
   console.log('Revenue check:')
   console.log('  New on-Yonder:', newOnFacts.length, '@ 20 CPA =', newOnFacts.length * 20)

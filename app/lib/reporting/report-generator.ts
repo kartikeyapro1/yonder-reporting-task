@@ -281,7 +281,7 @@ export function generateReportHtml(
         <tr style="background:${SAND_50};">
           <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:${INK_400};text-transform:uppercase;letter-spacing:0.08em;">Month</th>
           <th style="padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:${INK_400};text-transform:uppercase;letter-spacing:0.08em;">Status</th>
-          <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:${INK_400};text-transform:uppercase;letter-spacing:0.08em;">Txns</th>
+          <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:${INK_400};text-transform:uppercase;letter-spacing:0.08em;">Transactions</th>
           <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:${INK_400};text-transform:uppercase;letter-spacing:0.08em;">Spend</th>
           <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:${INK_400};text-transform:uppercase;letter-spacing:0.08em;">Revenue</th>
           <th style="padding:10px 16px;text-align:right;font-size:11px;font-weight:600;color:${INK_400};text-transform:uppercase;letter-spacing:0.08em;">New</th>

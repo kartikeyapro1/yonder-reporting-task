@@ -240,9 +240,9 @@ export function InternalPartnerDetailClient({ summary }: Props) {
                 <tr className="border-b border-gray-100 bg-sand-50/80">
                   <th className="text-left px-6 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Month</th>
                   {hasOnOff && <th className="text-center px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Status</th>}
-                  <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Txns</th>
+                  <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Transactions</th>
                   <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Spend</th>
-                  <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Fee</th>
+                  <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Commission</th>
                   <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">New</th>
                   <th className="text-right px-4 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Repeat</th>
                   <th className="text-right px-6 py-3 text-[11px] font-semibold text-ink-400 uppercase tracking-caps">Customers</th>

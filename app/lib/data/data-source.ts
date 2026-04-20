@@ -11,7 +11,7 @@
  * Usage:
  *   import { getDataSource } from '@/lib/data/data-source'
  *   const ds = getDataSource()
- *   const txns = ds.loadTransactions()
+ *   const transactions = ds.loadTransactions()
  *
  * The active implementation is selected via the DATA_SOURCE env var:
  *   DATA_SOURCE=csv      → CsvDataSource  (default)

@@ -2,14 +2,14 @@
 
 import { useRef } from 'react'
 import Link from 'next/link'
-import { motion, useScroll, useTransform } from 'motion/react'
+import { motion, useScroll, useTransform, useInView } from 'motion/react'
 import BlurText from '@/components/ui/BlurText'
 import CountUp from '@/components/ui/CountUp'
 import { SpendTrendChart } from '@/components/charts/SpendTrendChart'
 import { NewVsExistingChart } from '@/components/charts/NewVsExistingChart'
 import { OnOffComparisonChart } from '@/components/charts/OnOffComparisonChart'
 import { PARTNER_CONFIGS } from '@/lib/config/partner-commercials'
-import { FadeIn, StaggerList, StaggerItem, ScaleIn, AnimatedLine } from '@/components/motion'
+import { FadeIn, StaggerList, StaggerItem, ScaleIn, AnimatedLine, SplitHeading, FloatCard } from '@/components/motion'
 import { YonderLogo } from '@/components/brand/YonderLogo'
 import type { PartnerSummaryMetrics } from '@/lib/types'
 
@@ -28,6 +28,18 @@ function fmt(n: number) {
 /* ── Easing ──────────────────────────────────────────────────── */
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1]
+
+/* ── Section progress dot ────────────────────────────────────── */
+
+function SectionDot({ active }: { active: boolean }) {
+  return (
+    <motion.div
+      animate={{ scale: active ? 1 : 0.6, opacity: active ? 1 : 0.35 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+      className={`w-2 h-2 rounded-full transition-colors duration-300 ${active ? 'bg-coral' : 'bg-ink-300'}`}
+    />
+  )
+}
 
 /* ═══════════════════════════════════════════════════════════════ */
 /*  Main component                                               */
@@ -66,19 +78,44 @@ export function PartnerFacingClient({ summary }: Props) {
   /* Scroll progress bar */
   const { scrollYProgress: pageProgress } = useScroll()
 
+  /* Section refs for progress dots */
+  const sec0Ref = useRef(null)
+  const sec1Ref = useRef(null)
+  const sec2Ref = useRef(null)
+  const sec3Ref = useRef(null)
+  const sec4Ref = useRef(null)
+  const sec5Ref = useRef(null)
+
+  const sec0 = useInView(sec0Ref, { margin: '-40% 0px -40% 0px' })
+  const sec1 = useInView(sec1Ref, { margin: '-40% 0px -40% 0px' })
+  const sec2 = useInView(sec2Ref, { margin: '-40% 0px -40% 0px' })
+  const sec3 = useInView(sec3Ref, { margin: '-40% 0px -40% 0px' })
+  const sec4 = useInView(sec4Ref, { margin: '-40% 0px -40% 0px' })
+  const sec5 = useInView(sec5Ref, { margin: '-40% 0px -40% 0px' })
+
+  const sections = [sec0, sec1, sec2, sec3, sec4, sec5]
+
   return (
     <main className="bg-white overflow-x-hidden">
-      {/* ── Scroll progress ──────────────────────────────── */}
+      {/* ── Scroll progress bar ──────────────────────────────── */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-coral to-coral-light origin-left z-50 no-print"
         style={{ scaleX: pageProgress }}
       />
 
+      {/* ── Section progress dots ─────────────────────────────── */}
+      <div className="fixed right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3 no-print hidden md:flex">
+        {sections.map((active, i) => (
+          <SectionDot key={i} active={active} />
+        ))}
+      </div>
+
       {/* ═════════════════════════════════════════════════════ */}
       {/*  HERO — Full viewport, partner name + context        */}
       {/* ═════════════════════════════════════════════════════ */}
       <section
-        ref={heroRef}
+        ref={sec0Ref}
+        id="hero"
         className="relative min-h-[100svh] flex flex-col items-center justify-center px-6 bg-sand-50 noise"
       >
         {/* Floating brand */}
@@ -89,6 +126,7 @@ export function PartnerFacingClient({ summary }: Props) {
         <motion.div
           style={{ y: heroY, opacity: heroOpacity }}
           className="text-center max-w-3xl relative z-10"
+          ref={heroRef}
         >
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -140,19 +178,27 @@ export function PartnerFacingClient({ summary }: Props) {
       {/* ═════════════════════════════════════════════════════ */}
       {/*  YOUR PARTNERSHIP AT A GLANCE                        */}
       {/* ═════════════════════════════════════════════════════ */}
-      <section className="py-28 md:py-40 bg-white">
+      <section ref={sec1Ref} id="glance" className="py-28 md:py-40 bg-white">
         <div className="max-w-4xl mx-auto px-6">
           <FadeIn className="text-center mb-20">
             <p className="text-[11px] font-semibold text-coral uppercase tracking-caps mb-4">At a glance</p>
             <h2 className="text-[clamp(1.6rem,3.5vw,2.5rem)] font-display font-semibold text-ink-900 tracking-display leading-snug max-w-lg mx-auto">
-              Your Yonder partnership,{' '}
-              <span className="text-ink-300">by the numbers</span>
+              <SplitHeading
+                text="Your Yonder partnership,"
+                className="text-ink-900"
+              />
+              {' '}
+              <SplitHeading
+                text="by the numbers"
+                className="text-ink-300"
+                delay={0.3}
+              />
             </h2>
           </FadeIn>
 
-          <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <StaggerList className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6" staggerDelay={0.12}>
             <StaggerItem>
-              <div className="bg-sand-50 rounded-2xl border border-sand-200 p-5 md:p-6 text-center hover:shadow-float hover:-translate-y-0.5 transition-all duration-400">
+              <FloatCard className="bg-sand-50 rounded-2xl border border-sand-200 p-5 md:p-6 text-center cursor-default">
                 <p className="text-[clamp(1.8rem,4vw,2.5rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
                   {summary.total_spend_gbp >= 1000 ? (
                     <>£<CountUp to={parseFloat((summary.total_spend_gbp / 1000).toFixed(1))} from={0} duration={2.2} />k</>
@@ -162,34 +208,34 @@ export function PartnerFacingClient({ summary }: Props) {
                 </p>
                 <p className="text-sm font-medium text-ink-600 mb-1">Total customer spend</p>
                 <p className="text-xs text-ink-300 leading-relaxed">from Yonder members at your venue</p>
-              </div>
+              </FloatCard>
             </StaggerItem>
             <StaggerItem>
-              <div className="bg-sand-50 rounded-2xl border border-sand-200 p-5 md:p-6 text-center hover:shadow-float hover:-translate-y-0.5 transition-all duration-400">
+              <FloatCard className="bg-sand-50 rounded-2xl border border-sand-200 p-5 md:p-6 text-center cursor-default" delay={0.05}>
                 <p className="text-[clamp(1.8rem,4vw,2.5rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
                   <CountUp to={summary.new_users} from={0} duration={2.2} separator="," />
                 </p>
                 <p className="text-sm font-medium text-ink-600 mb-1">New customers</p>
                 <p className="text-xs text-ink-300 leading-relaxed">visited for the first time via Yonder</p>
-              </div>
+              </FloatCard>
             </StaggerItem>
             <StaggerItem>
-              <div className="bg-sand-50 rounded-2xl border border-sand-200 p-5 md:p-6 text-center hover:shadow-float hover:-translate-y-0.5 transition-all duration-400">
+              <FloatCard className="bg-sand-50 rounded-2xl border border-sand-200 p-5 md:p-6 text-center cursor-default" delay={0.1}>
                 <p className="text-[clamp(1.8rem,4vw,2.5rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
                   <CountUp to={summary.total_transactions} from={0} duration={2.2} separator="," />
                 </p>
                 <p className="text-sm font-medium text-ink-600 mb-1">Total visits</p>
                 <p className="text-xs text-ink-300 leading-relaxed">avg. {fmt(avgTxn)} per transaction</p>
-              </div>
+              </FloatCard>
             </StaggerItem>
             <StaggerItem>
-              <div className="bg-sand-50 rounded-2xl border border-sand-200 p-5 md:p-6 text-center hover:shadow-float hover:-translate-y-0.5 transition-all duration-400">
+              <FloatCard className="bg-sand-50 rounded-2xl border border-sand-200 p-5 md:p-6 text-center cursor-default" delay={0.15}>
                 <p className="text-[clamp(1.8rem,4vw,2.5rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
                   <CountUp to={Math.round(repeatRate)} from={0} duration={2.2} />%
                 </p>
                 <p className="text-sm font-medium text-ink-600 mb-1">Came back again</p>
                 <p className="text-xs text-ink-300 leading-relaxed">of all visits were returning customers</p>
-              </div>
+              </FloatCard>
             </StaggerItem>
           </StaggerList>
         </div>
@@ -199,12 +245,12 @@ export function PartnerFacingClient({ summary }: Props) {
       {/*  THE REWARDS EFFECT — On/Off Yonder comparison       */}
       {/* ═════════════════════════════════════════════════════ */}
       {hasOnOff && (
-        <section className="py-28 md:py-40 bg-sand-50">
+        <section ref={sec2Ref} id="rewards-effect" className="py-28 md:py-40 bg-sand-50">
           <div className="max-w-3xl mx-auto px-6">
             <FadeIn className="text-center mb-10">
               <p className="text-[11px] font-semibold text-coral uppercase tracking-caps mb-4">The rewards effect</p>
               <h2 className="text-[clamp(1.6rem,3.5vw,2.5rem)] font-display font-semibold text-ink-900 tracking-display leading-snug max-w-xl mx-auto">
-                When your rewards are live, your customers spend more
+                <SplitHeading text="When your rewards are live, your customers spend more" />
               </h2>
             </FadeIn>
 
@@ -218,12 +264,18 @@ export function PartnerFacingClient({ summary }: Props) {
             {/* Dramatic uplift number */}
             <FadeIn className="text-center mb-16">
               <div className="inline-block">
-                <p className={`text-[clamp(4rem,12vw,8rem)] font-display font-semibold tracking-tighter leading-none ${
-                  incrementalPositive ? 'text-gradient-coral' : 'text-ink-200'
-                }`}>
+                <motion.p
+                  className={`text-[clamp(4rem,12vw,8rem)] font-display font-semibold tracking-tighter leading-none ${
+                    incrementalPositive ? 'text-gradient-coral' : 'text-ink-200'
+                  }`}
+                  initial={{ opacity: 0, scale: 0.85, filter: 'blur(12px)' }}
+                  whileInView={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                  viewport={{ once: true, margin: '-60px' }}
+                  transition={{ duration: 1, ease }}
+                >
                   {incrementalPositive ? '+' : ''}
                   <CountUp to={Math.round(summary.incremental_spend)} from={0} duration={2.5} separator="," />
-                </p>
+                </motion.p>
                 <AnimatedLine className="mt-2 !bg-coral" />
               </div>
               <p className="text-base text-ink-400 mt-5 max-w-sm mx-auto leading-relaxed">
@@ -234,10 +286,10 @@ export function PartnerFacingClient({ summary }: Props) {
               {upliftPct > 0 && (
                 <motion.p
                   className="text-sm font-semibold text-coral mt-3"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: 1.2 }}
+                  transition={{ delay: 0.6, duration: 0.5, ease }}
                 >
                   That&apos;s a {Math.round(upliftPct)}% uplift
                 </motion.p>
@@ -246,29 +298,25 @@ export function PartnerFacingClient({ summary }: Props) {
 
             {/* On vs Off comparison cards */}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <ScaleIn delay={0}>
-                <div className="rounded-2xl bg-coral-50/60 border border-coral-100 px-6 py-6 relative overflow-hidden">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-40" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-coral" />
-                    </span>
-                    <span className="text-[11px] font-semibold text-coral uppercase tracking-caps">Rewards live</span>
-                  </div>
-                  <p className="text-2xl md:text-3xl font-semibold text-ink-900 font-tabular tracking-tight">{fmt(summary.avg_monthly_on_spend)}</p>
-                  <p className="text-xs text-ink-400 mt-1.5">avg. monthly spend · {activeMonthCount} months</p>
+              <FloatCard delay={0} className="rounded-2xl bg-coral-50/60 border border-coral-100 px-6 py-6 relative overflow-hidden">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-coral opacity-40" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-coral" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-coral uppercase tracking-caps">Rewards live</span>
                 </div>
-              </ScaleIn>
-              <ScaleIn delay={0.1}>
-                <div className="rounded-2xl bg-sand-100 border border-sand-200 px-6 py-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-ink-200" />
-                    <span className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps">Rewards off</span>
-                  </div>
-                  <p className="text-2xl md:text-3xl font-semibold text-ink-900 font-tabular tracking-tight">{fmt(summary.avg_monthly_off_spend)}</p>
-                  <p className="text-xs text-ink-300 mt-1.5">avg. monthly spend · {inactiveMonthCount} months</p>
+                <p className="text-2xl md:text-3xl font-semibold text-ink-900 font-tabular tracking-tight">{fmt(summary.avg_monthly_on_spend)}</p>
+                <p className="text-xs text-ink-400 mt-1.5">avg. monthly spend · {activeMonthCount} months</p>
+              </FloatCard>
+              <FloatCard delay={0.08} className="rounded-2xl bg-sand-100 border border-sand-200 px-6 py-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2.5 h-2.5 rounded-full bg-ink-200" />
+                  <span className="text-[11px] font-semibold text-ink-300 uppercase tracking-caps">Rewards off</span>
                 </div>
-              </ScaleIn>
+                <p className="text-2xl md:text-3xl font-semibold text-ink-900 font-tabular tracking-tight">{fmt(summary.avg_monthly_off_spend)}</p>
+                <p className="text-xs text-ink-300 mt-1.5">avg. monthly spend · {inactiveMonthCount} months</p>
+              </FloatCard>
             </div>
 
             {/* Explanation */}
@@ -300,12 +348,22 @@ export function PartnerFacingClient({ summary }: Props) {
       {/* ═════════════════════════════════════════════════════ */}
       {/*  NEW CUSTOMERS                                       */}
       {/* ═════════════════════════════════════════════════════ */}
-      <section className={`py-28 md:py-40 ${hasOnOff ? 'bg-white' : 'bg-sand-50'}`}>
+      <section ref={sec3Ref} id="customers" className={`py-28 md:py-40 ${hasOnOff ? 'bg-white' : 'bg-sand-50'}`}>
         <div className="max-w-3xl mx-auto px-6">
           <FadeIn className="text-center mb-16">
             <p className="text-[11px] font-semibold text-coral uppercase tracking-caps mb-4">Customer acquisition</p>
             <h2 className="text-[clamp(1.6rem,3.5vw,2.5rem)] font-display font-semibold text-ink-900 tracking-display leading-snug max-w-xl mx-auto">
-              Yonder brought <span className="text-coral">{summary.new_users.toLocaleString()}</span> new customers to your door
+              Yonder brought{' '}
+              <motion.span
+                className="text-coral"
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.6, delay: 0.2, ease }}
+              >
+                {summary.new_users.toLocaleString()}
+              </motion.span>{' '}
+              <SplitHeading text="new customers to your door" delay={0.3} />
             </h2>
           </FadeIn>
 
@@ -318,33 +376,27 @@ export function PartnerFacingClient({ summary }: Props) {
           </FadeIn>
 
           <div className="grid grid-cols-3 gap-4 mb-16">
-            <ScaleIn delay={0}>
-              <div className="bg-sand-50 rounded-2xl border border-sand-200 p-5 text-center hover:shadow-float hover:-translate-y-0.5 transition-all duration-400">
-                <p className="text-[clamp(1.5rem,3vw,2.25rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
-                  <CountUp to={summary.new_users} from={0} duration={2} separator="," />
-                </p>
-                <p className="text-xs font-medium text-ink-600">First-time visitors</p>
-                <p className="text-[11px] text-ink-300 mt-1">{fmt(summary.new_spend_gbp)} total spend</p>
-              </div>
-            </ScaleIn>
-            <ScaleIn delay={0.1}>
-              <div className="bg-sand-50 rounded-2xl border border-sand-200 p-5 text-center hover:shadow-float hover:-translate-y-0.5 transition-all duration-400">
-                <p className="text-[clamp(1.5rem,3vw,2.25rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
-                  <CountUp to={Math.round(repeatRate)} from={0} duration={2} /><span>%</span>
-                </p>
-                <p className="text-xs font-medium text-ink-600">Repeat rate</p>
-                <p className="text-[11px] text-ink-300 mt-1">came back for another visit</p>
-              </div>
-            </ScaleIn>
-            <ScaleIn delay={0.2}>
-              <div className="bg-sand-50 rounded-2xl border border-sand-200 p-5 text-center hover:shadow-float hover:-translate-y-0.5 transition-all duration-400">
-                <p className="text-[clamp(1.5rem,3vw,2.25rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
-                  <CountUp to={summary.unique_users} from={0} duration={2} separator="," />
-                </p>
-                <p className="text-xs font-medium text-ink-600">Total unique visitors</p>
-                <p className="text-[11px] text-ink-300 mt-1">across the whole period</p>
-              </div>
-            </ScaleIn>
+            <FloatCard delay={0} className="bg-sand-50 rounded-2xl border border-sand-200 p-5 text-center cursor-default">
+              <p className="text-[clamp(1.5rem,3vw,2.25rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
+                <CountUp to={summary.new_users} from={0} duration={2} separator="," />
+              </p>
+              <p className="text-xs font-medium text-ink-600">First-time visitors</p>
+              <p className="text-[11px] text-ink-300 mt-1">{fmt(summary.new_spend_gbp)} total spend</p>
+            </FloatCard>
+            <FloatCard delay={0.1} className="bg-sand-50 rounded-2xl border border-sand-200 p-5 text-center cursor-default">
+              <p className="text-[clamp(1.5rem,3vw,2.25rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
+                <CountUp to={Math.round(repeatRate)} from={0} duration={2} /><span>%</span>
+              </p>
+              <p className="text-xs font-medium text-ink-600">Repeat rate</p>
+              <p className="text-[11px] text-ink-300 mt-1">came back for another visit</p>
+            </FloatCard>
+            <FloatCard delay={0.2} className="bg-sand-50 rounded-2xl border border-sand-200 p-5 text-center cursor-default">
+              <p className="text-[clamp(1.5rem,3vw,2.25rem)] font-semibold text-ink-900 tracking-tight leading-none mb-2 font-tabular">
+                <CountUp to={summary.unique_users} from={0} duration={2} separator="," />
+              </p>
+              <p className="text-xs font-medium text-ink-600">Total unique visitors</p>
+              <p className="text-[11px] text-ink-300 mt-1">across the whole period</p>
+            </FloatCard>
           </div>
 
           {/* New vs repeat chart */}
@@ -364,12 +416,12 @@ export function PartnerFacingClient({ summary }: Props) {
       {/*  BOOST PERIODS (if applicable)                       */}
       {/* ═════════════════════════════════════════════════════ */}
       {summary.boost_transactions > 0 && (
-        <section className="py-28 md:py-40 bg-sand-50">
+        <section ref={sec4Ref} id="boosts" className="py-28 md:py-40 bg-sand-50">
           <div className="max-w-3xl mx-auto px-6">
             <FadeIn className="text-center mb-16">
               <p className="text-[11px] font-semibold text-coral uppercase tracking-caps mb-4">Reward boosts</p>
               <h2 className="text-[clamp(1.6rem,3.5vw,2.5rem)] font-display font-semibold text-ink-900 tracking-display leading-snug max-w-xl mx-auto">
-                Time-limited boosts drove additional engagement
+                <SplitHeading text="Time-limited boosts drove additional engagement" />
               </h2>
             </FadeIn>
 
@@ -380,20 +432,20 @@ export function PartnerFacingClient({ summary }: Props) {
               </p>
             </FadeIn>
 
-            <StaggerList className="grid grid-cols-2 gap-4 text-center">
+            <StaggerList className="grid grid-cols-2 gap-4 text-center" staggerDelay={0.12}>
               <StaggerItem>
-                <div className="bg-white rounded-2xl border border-gray-200/60 p-6 shadow-card">
+                <FloatCard className="bg-white rounded-2xl border border-gray-200/60 p-6 shadow-card cursor-default">
                   <p className="text-2xl font-semibold text-ink-900 font-tabular tracking-tight">
                     <CountUp to={summary.boost_transactions} from={0} duration={2} separator="," />
                   </p>
                   <p className="text-xs text-ink-400 mt-1">boost visits</p>
-                </div>
+                </FloatCard>
               </StaggerItem>
               <StaggerItem>
-                <div className="bg-white rounded-2xl border border-gray-200/60 p-6 shadow-card">
+                <FloatCard className="bg-white rounded-2xl border border-gray-200/60 p-6 shadow-card cursor-default" delay={0.1}>
                   <p className="text-2xl font-semibold text-ink-900 font-tabular tracking-tight">{fmt(summary.boost_spend_gbp)}</p>
                   <p className="text-xs text-ink-400 mt-1">boost spend</p>
-                </div>
+                </FloatCard>
               </StaggerItem>
             </StaggerList>
           </div>
@@ -404,12 +456,12 @@ export function PartnerFacingClient({ summary }: Props) {
       {/*  SPEND OVER TIME (for partners without on/off data)  */}
       {/* ═════════════════════════════════════════════════════ */}
       {!hasOnOff && (
-        <section className="py-28 md:py-40 bg-white">
+        <section id="performance" className="py-28 md:py-40 bg-white">
           <div className="max-w-3xl mx-auto px-6">
             <FadeIn className="text-center mb-16">
               <p className="text-[11px] font-semibold text-coral uppercase tracking-caps mb-4">Performance</p>
               <h2 className="text-[clamp(1.6rem,3.5vw,2.5rem)] font-display font-semibold text-ink-900 tracking-display">
-                How spend grew over time
+                <SplitHeading text="How spend grew over time" />
               </h2>
             </FadeIn>
             <FadeIn>
@@ -429,24 +481,38 @@ export function PartnerFacingClient({ summary }: Props) {
       {/*  KEY TAKEAWAYS                                       */}
       {/* ═════════════════════════════════════════════════════ */}
       {summary.insights.length > 0 && (
-        <section className={`py-28 md:py-40 ${!hasOnOff ? 'bg-sand-50' : summary.boost_transactions > 0 ? 'bg-white' : 'bg-sand-50'}`}>
+        <section
+          ref={sec5Ref}
+          id="insights"
+          className={`py-28 md:py-40 ${!hasOnOff ? 'bg-sand-50' : summary.boost_transactions > 0 ? 'bg-white' : 'bg-sand-50'}`}
+        >
           <div className="max-w-2xl mx-auto px-6">
             <FadeIn className="text-center mb-14">
               <p className="text-[11px] font-semibold text-coral uppercase tracking-caps mb-4">Key takeaways</p>
               <h2 className="text-[clamp(1.4rem,3vw,2rem)] font-display font-semibold text-ink-900 tracking-display">
-                What this means for {summary.display_name}
+                <SplitHeading text={`What this means for ${summary.display_name}`} />
               </h2>
             </FadeIn>
 
-            <StaggerList className="space-y-4">
+            <StaggerList className="space-y-4" staggerDelay={0.1}>
               {summary.insights.map((insight, i) => (
                 <StaggerItem key={i}>
-                  <div className="flex gap-4 items-start bg-white rounded-2xl border border-gray-200/60 px-6 py-5 shadow-card hover:shadow-float transition-shadow duration-400">
-                    <div className="w-7 h-7 rounded-full bg-coral-50 flex items-center justify-center shrink-0 mt-0.5">
-                      <span className="text-coral text-xs font-bold">{i + 1}</span>
-                    </div>
+                  <motion.div
+                    className="flex gap-4 items-start bg-white rounded-2xl border border-gray-200/60 px-6 py-5 shadow-card cursor-default"
+                    whileHover={{ y: -3, boxShadow: '0 8px 32px rgba(0,0,0,0.08)', transition: { type: 'spring', stiffness: 300, damping: 22 } }}
+                  >
+                    <motion.div
+                      className="w-7 h-7 rounded-full bg-coral-50 flex items-center justify-center shrink-0 mt-0.5"
+                      whileHover={{ scale: 1.15, backgroundColor: '#F04E37' }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                    >
+                      <motion.span
+                        className="text-coral text-xs font-bold"
+                        whileHover={{ color: '#ffffff' }}
+                      >{i + 1}</motion.span>
+                    </motion.div>
                     <p className="text-[15px] text-ink-500 leading-relaxed">{insight}</p>
-                  </div>
+                  </motion.div>
                 </StaggerItem>
               ))}
             </StaggerList>
@@ -507,3 +573,4 @@ export function PartnerFacingClient({ summary }: Props) {
     </main>
   )
 }
+

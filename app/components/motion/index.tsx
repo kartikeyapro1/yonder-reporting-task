@@ -130,18 +130,24 @@ const staggerChild: Variants = {
 interface StaggerProps {
   children: ReactNode
   className?: string
+  staggerDelay?: number
 }
 
 /**
  * Container that staggers the entrance of its `StaggerItem` children.
+ * staggerDelay controls pause between each child (default 0.08s).
  */
-export function StaggerList({ children, className = '' }: StaggerProps) {
+export function StaggerList({ children, className = '', staggerDelay = 0.08 }: StaggerProps) {
+  const container: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: staggerDelay } },
+  }
   return (
     <motion.div
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-60px' }}
-      variants={staggerContainer}
+      viewport={{ once: true, margin: '-40px' }}
+      variants={container}
       className={className}
     >
       {children}
@@ -200,5 +206,78 @@ export function CountReveal({
     >
       {children}
     </motion.span>
+  )
+}
+
+/* ── SplitHeading ────────────────────────────────────────────── */
+
+/**
+ * Splits a heading string into words and reveals each word with a
+ * staggered slide-up entrance on scroll. Use in place of FadeIn for h2s.
+ */
+export function SplitHeading({
+  text,
+  className = '',
+  delay = 0,
+  staggerDelay = 0.06,
+}: {
+  text: string
+  className?: string
+  delay?: number
+  staggerDelay?: number
+}) {
+  const words = text.split(' ')
+  const container: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: staggerDelay, delayChildren: delay } },
+  }
+  const word: Variants = {
+    hidden: { opacity: 0, y: 28, filter: 'blur(6px)' },
+    visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.7, ease: EXPO_OUT } },
+  }
+  return (
+    <motion.span
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-40px' }}
+      variants={container}
+      className={`inline-flex flex-wrap gap-x-[0.3em] gap-y-1 ${className}`}
+    >
+      {words.map((w, i) => (
+        <motion.span key={i} variants={word} className="inline-block">
+          {w}
+        </motion.span>
+      ))}
+    </motion.span>
+  )
+}
+
+/* ── FloatCard ───────────────────────────────────────────────── */
+
+/**
+ * Wraps a card element and adds a hover lift + spring shadow.
+ * Drop-in replacement around any card div.
+ */
+export function FloatCard({
+  children,
+  className = '',
+  delay = 0,
+}: {
+  children: ReactNode
+  className?: string
+  delay?: number
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0.97 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.55, delay, ease: EXPO_OUT }}
+      whileHover={{ y: -5, scale: 1.015, transition: { type: 'spring', stiffness: 320, damping: 22 } }}
+      whileTap={{ scale: 0.99 }}
+      className={className}
+    >
+      {children}
+    </motion.div>
   )
 }
