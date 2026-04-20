@@ -64,6 +64,7 @@ export const getCleanTransactions = cache(function _getCleanTransactions(): Clea
         state: r.state,
         type: r.type,
         is_settled: r.state === 'settled',
+        merchant_category: r.merchant_category || 'general',
       } satisfies CleanTransaction
     })
     .filter(t => t.partner_name !== '_unknown') // only keep recognised partner transactions

@@ -26,12 +26,23 @@ export const getPartnerTransactionFacts = cache(
   const baseline = config ? new Date(config.baseline_date) : new Date('2000-01-01')
 
   // Build boost lookup: transaction_id → experience row (for this partner)
-  // Only include records where match_status === 'match'; match_denied rows must be excluded
-  // to stay consistent with the SQL layer (06_partner_transaction_facts.sql line: WHERE match_status IN ('match'))
-  const boostByTxId = new Map<string, { boost_type: string }>()
+  // Filter rules (must satisfy ALL):
+  //   1. match_status === 'match'      — experience was matched to this transaction
+  //   2. status === 'redeemable'       — experience is eligible for redemption (not_redeemable excluded)
+  // Both checks are required to stay consistent with the SQL layer
+  // (06_partner_transaction_facts.sql WHERE match_status IN ('match'))
+  const boostByTxId = new Map<string, { boost_type: string; enhanced_redemption_rate: boolean }>()
   for (const exp of experiences) {
-    if (exp.transaction_id && exp.clean_description === partnerName && exp.match_status === 'match') {
-      boostByTxId.set(exp.transaction_id, { boost_type: exp.boost_type ?? '' })
+    if (
+      exp.transaction_id &&
+      exp.clean_description === partnerName &&
+      exp.match_status === 'match' &&
+      exp.status === 'redeemable'
+    ) {
+      boostByTxId.set(exp.transaction_id, {
+        boost_type: exp.boost_type ?? '',
+        enhanced_redemption_rate: exp.enhanced_redemption_rate === 'true' || exp.enhanced_redemption_rate === '1',
+      })
     }
   }
 
@@ -73,6 +84,7 @@ export const getPartnerTransactionFacts = cache(
       is_on_yonder: onYonder,
       is_boost: isBoost,
       boost_type: boostEntry?.boost_type ?? null,
+      enhanced_redemption_rate: boostEntry?.enhanced_redemption_rate ?? false,
       commercial_model: model?.type ?? 'cpa_new_repeat',
       revenue_contribution: revenue,
     } satisfies PartnerTransactionFact

@@ -101,6 +101,7 @@ export const getPartnerReportSummary = cache(
   const newFacts = settled.filter(f => f.is_new_customer)
   const repeatFacts = settled.filter(f => !f.is_new_customer)
   const boostFacts = settled.filter(f => f.is_boost)
+  const enhancedRateFacts = settled.filter(f => f.enhanced_redemption_rate)
 
   const lastMonth = inScope.length > 0 ? inScope[inScope.length - 1].year_month : baselineYm
   const firstMonth = inScope.length > 0 ? inScope[0].year_month : lastMonth
@@ -125,6 +126,9 @@ export const getPartnerReportSummary = cache(
     boost_transactions: boostFacts.length,
     boost_spend_gbp: boostFacts.reduce((s, f) => s + f.trans_amount_gbp, 0),
     boost_revenue: boostFacts.reduce((s, f) => s + f.revenue_contribution, 0),
+
+    enhanced_rate_transactions: enhancedRateFacts.length,
+    enhanced_rate_spend_gbp: enhancedRateFacts.reduce((s, f) => s + f.trans_amount_gbp, 0),
 
     unique_users: new Set(settled.map(f => f.user_id)).size,
     new_users: new Set(newFacts.map(f => f.user_id)).size,

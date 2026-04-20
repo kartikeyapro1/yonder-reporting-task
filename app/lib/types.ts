@@ -56,6 +56,7 @@ export interface CleanTransaction {
   state: string                  // settled | declined | pending
   type: string                   // contactless | online | chip_and_pin
   is_settled: boolean
+  merchant_category: string      // e.g. eating_out | groceries | transport | general
 }
 
 export interface PartnerUserFirstSeen {
@@ -75,8 +76,9 @@ export interface PartnerTransactionFact {
   is_settled: boolean
   is_new_customer: boolean       // true if this is within their first engagement month with this partner
   is_on_yonder: boolean          // true if tx falls within an active period
-  is_boost: boolean              // true if matched to experience_visited with time_based boost
+  is_boost: boolean              // true if matched to experience_visited with boost_type=time_based AND status=redeemable
   boost_type: string | null
+  enhanced_redemption_rate: boolean  // true if experience_visited.enhanced_redemption_rate was true for this tx
   commercial_model: CommercialModelType
   revenue_contribution: number
 }
@@ -143,6 +145,9 @@ export interface PartnerMonthlyMetrics {
   boost_spend_gbp: number
   boost_revenue: number
 
+  enhanced_rate_transactions: number   // transactions where enhanced_redemption_rate = true
+  enhanced_rate_spend_gbp: number
+
   total_revenue: number
   new_revenue: number
   repeat_revenue: number
@@ -171,6 +176,9 @@ export interface PartnerSummaryMetrics {
   boost_transactions: number
   boost_spend_gbp: number
   boost_revenue: number
+
+  enhanced_rate_transactions: number   // transactions where enhanced_redemption_rate = true
+  enhanced_rate_spend_gbp: number
 
   unique_users: number
   new_users: number

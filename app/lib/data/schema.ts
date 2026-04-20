@@ -45,7 +45,7 @@ export const EXPERIENCE_VISITED_SCHEMA = {
     type: 'double precision',
   },
   enhanced_redemption_rate: {
-    description: 'Whether the transaction qualified for an enhanced (boosted) redemption rate',
+    description: 'Whether the transaction qualified for an enhanced (boosted) cashback rate. Distinct from boost_type: a transaction can have enhanced_redemption_rate=true with no boost_type (standard enhanced cashback), or both fields set (time-based boost that also applied an enhanced rate). The pipeline tracks this separately from is_boost.',
     type: 'boolean',
   },
   boost_type: {

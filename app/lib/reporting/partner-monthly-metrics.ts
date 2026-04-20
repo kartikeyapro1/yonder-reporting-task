@@ -29,6 +29,7 @@ export const getPartnerMonthlyMetrics = cache(
     const newFacts = settled.filter(f => f.is_new_customer)
     const repeatFacts = settled.filter(f => !f.is_new_customer)
     const boostFacts = settled.filter(f => f.is_boost)
+    const enhancedRateFacts = settled.filter(f => f.enhanced_redemption_rate)
 
     const uniqueUsers = new Set(settled.map(f => f.user_id)).size
     const newUsers = new Set(newFacts.map(f => f.user_id)).size
@@ -50,6 +51,9 @@ export const getPartnerMonthlyMetrics = cache(
       boost_transactions: boostFacts.length,
       boost_spend_gbp: boostFacts.reduce((s, f) => s + f.trans_amount_gbp, 0),
       boost_revenue: boostFacts.reduce((s, f) => s + f.revenue_contribution, 0),
+
+      enhanced_rate_transactions: enhancedRateFacts.length,
+      enhanced_rate_spend_gbp: enhancedRateFacts.reduce((s, f) => s + f.trans_amount_gbp, 0),
 
       total_revenue: settled.reduce((s, f) => s + f.revenue_contribution, 0),
       new_revenue: newFacts.reduce((s, f) => s + f.revenue_contribution, 0),

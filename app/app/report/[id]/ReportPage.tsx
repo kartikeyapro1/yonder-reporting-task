@@ -297,7 +297,13 @@ export function ReportPage({ summary, commercials }: Props) {
               <DataRow label="New customer visits (first-time)" value={fmt(summary.new_revenue)} highlight />
               <DataRow label="Returning customer visits" value={fmt(summary.repeat_revenue)} highlight />
               {summary.boost_revenue > 0 && (
-                <DataRow label="Fee from time-boost periods" value={fmt(summary.boost_revenue)} highlight />
+                <DataRow label="Commission from time-boost periods" value={fmt(summary.boost_revenue)} highlight />
+              )}
+              {summary.enhanced_rate_transactions > 0 && (
+                <DataRow
+                  label={`Enhanced rate visits (${summary.enhanced_rate_transactions.toLocaleString()} transactions)`}
+                  value={fmt(summary.enhanced_rate_spend_gbp)}
+                />
               )}
               <DataRow label="Total partnership investment" value={fmt(summary.total_revenue)} highlight large />
               <DataRow label="Effective rate" value={`${revenueMargin.toFixed(2)}% of total card spend`} />
