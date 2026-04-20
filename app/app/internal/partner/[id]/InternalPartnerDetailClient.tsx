@@ -156,6 +156,8 @@ export function InternalPartnerDetailClient({ summary }: Props) {
             </Link>
             <Link
               href={`/report/${token}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-sm font-medium px-4 py-2.5 rounded-xl bg-coral text-white
                 hover:bg-coral-dark hover:shadow-glow-coral transition-all duration-300 flex items-center gap-1.5"
             >
