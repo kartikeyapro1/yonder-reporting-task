@@ -34,9 +34,13 @@ DATA_SOURCE=csv
 # ─── Auth ─────────────────────────────────────────────
 # Password for the internal dashboard. Must match on both server and middleware.
 INTERNAL_SECRET=yonder2025
+
+# ─── Dev Escape Hatch ─────────────────────────────────
+# Set to "true" to bypass partner token checks locally (never set in production).
+# ALLOW_DEV_BYPASS=true
 ```
 
-> **Important:** `INTERNAL_SECRET` must be set in `.env.local` for the internal login to work. The middleware defaults to an empty string (fail-closed) so without this env var, login will always fail.
+> **Important:** `INTERNAL_SECRET` must be set in `.env.local` for the internal login to work. The middleware is fail-closed — without this env var set, login will always fail. In production it throws at startup if the var is missing.
 
 ---
 
@@ -61,7 +65,7 @@ Partners access their dashboards via magic-link tokens — no password required.
 
 Report pages mirror the same token structure: `/report/f8a2d1e94c37`.
 
-Internal staff (anyone with a valid `yonder_internal` cookie) can bypass partner auth and preview any partner page directly.
+Internal staff (anyone with a valid `yonder_internal` cookie) can view any partner or report page directly — the middleware lets them through without a partner token.
 
 ---
 
@@ -83,8 +87,12 @@ Internal staff (anyone with a valid `yonder_internal` cookie) can bypass partner
 │   │   └── reporting/      # Metric calculation logic
 │   └── .env.local          # Local env vars (not committed)
 ├── data/                   # Synthetic CSV data files
-├── docs/                   # Architecture, assumptions, metrics docs
-└── sql/                    # Reference SQL queries mirroring the TS pipeline
+├── docs/                   # Architecture, assumptions & metric definitions (start here)
+│   ├── architecture.md     # System design and data-flow overview
+│   ├── assumptions.md      # Data and modelling assumptions
+│   └── metrics.md          # Metric definitions and calculation methodology
+└── sql/                    # Read-only reference SQL mirroring the TypeScript pipeline
+                            # (for BigQuery — not executed by the app)
 ```
 
 ---
