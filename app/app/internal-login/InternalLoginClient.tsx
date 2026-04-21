@@ -30,7 +30,6 @@ export function InternalLoginClient() {
 
       if (res.ok) {
         const next = searchParams.get('next') ?? '/internal'
-        // Hard redirect so the browser sends the new cookie through middleware
         window.location.href = next
       } else {
         setError('Incorrect password. Try again.')
@@ -45,135 +44,147 @@ export function InternalLoginClient() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 relative overflow-hidden"
-      style={{ background: 'linear-gradient(145deg, #0f1318 0%, #1a1f25 50%, #0f1318 100%)' }}
-    >
-      {/* Background grid */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.035]"
-        style={{
-          backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
-        }}
-      />
-      {/* Coral glow top-right */}
-      <div className="fixed top-0 right-0 w-[600px] h-[400px] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at top right, rgba(232,80,58,0.12) 0%, transparent 70%)' }}
-      />
-      {/* Ink glow bottom-left */}
-      <div className="fixed bottom-0 left-0 w-[500px] h-[400px] pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at bottom left, rgba(26,31,37,0.8) 0%, transparent 70%)' }}
-      />
+    <main className="min-h-screen flex flex-col md:flex-row">
 
-      <motion.div
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-sm relative z-10"
-      >
-        {/* Logo lockup */}
-        <div className="flex items-center gap-2.5 mb-10 justify-center">
-          <div className="w-9 h-9 rounded-[10px] bg-coral flex items-center justify-center shadow-glow-coral">
-            <span className="text-white font-display font-bold text-base tracking-tight leading-none">Y</span>
+      {/* ── Left brand panel ─────────────────────────────────── */}
+      <div className="hidden md:flex md:w-[45%] flex-col justify-between p-10 bg-ink-950 relative overflow-hidden">
+        {/* Subtle coral radial glow */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 80% 60% at 20% 110%, rgba(232,80,58,0.18) 0%, transparent 60%)' }}
+        />
+
+        {/* Logo */}
+        <div className="flex items-center gap-2.5 relative z-10">
+          <div className="w-8 h-8 rounded-[9px] bg-coral flex items-center justify-center">
+            <span className="text-white font-bold text-sm leading-none">Y</span>
           </div>
-          <span className="text-white font-display font-semibold text-xl tracking-display">Yonder</span>
+          <span className="text-white font-semibold text-lg tracking-tight">Yonder</span>
         </div>
 
-        {/* Card */}
-        <div className="rounded-2xl overflow-hidden"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          {/* Coral top stripe */}
-          <div className="h-[3px] w-full bg-coral" />
+        {/* Main brand copy */}
+        <div className="relative z-10 space-y-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-coral mb-4">
+              Partner Analytics
+            </p>
+            <h2 className="text-4xl font-bold text-white leading-[1.1] tracking-tight">
+              Data that<br />moves the<br />needle.
+            </h2>
+          </div>
+          <p className="text-sm text-ink-400 leading-relaxed max-w-[220px]">
+            Real-time spend intelligence across all Yonder partner brands.
+          </p>
+        </div>
 
-          <div className="px-8 pt-7 pb-8">
-            <div className="mb-7">
-              <h1 className="text-xl font-display font-semibold text-white tracking-display mb-1.5">
-                Internal access
-              </h1>
-              <p className="text-sm text-ink-400">
-                Partner analytics — Yonder staff only
-              </p>
+        {/* Footer */}
+        <p className="text-[11px] text-ink-700 relative z-10">
+          © {new Date().getFullYear()} Yonder Technology Ltd
+        </p>
+      </div>
+
+      {/* ── Right form panel ─────────────────────────────────── */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 bg-sand-50 relative">
+        {/* Mobile logo */}
+        <div className="flex md:hidden items-center gap-2.5 mb-10">
+          <div className="w-8 h-8 rounded-[9px] bg-coral flex items-center justify-center">
+            <span className="text-white font-bold text-sm leading-none">Y</span>
+          </div>
+          <span className="text-ink-950 font-semibold text-lg tracking-tight">Yonder</span>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[360px]"
+        >
+          {/* Heading */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-ink-950 tracking-tight mb-1.5">
+              Staff sign‑in
+            </h1>
+            <p className="text-sm text-ink-400">
+              Yonder internal access only
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-xs font-semibold text-ink-500 uppercase tracking-[0.09em] mb-2"
+              >
+                Access password
+              </label>
+              <input
+                ref={inputRef}
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••••••"
+                className="w-full rounded-xl px-4 py-3 text-sm text-ink-950 bg-white
+                  border border-gray-200 placeholder:text-gray-300
+                  focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral
+                  transition-all duration-200 shadow-xs"
+                required
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-[11px] font-semibold text-ink-500 uppercase tracking-caps mb-2"
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4, height: 0 }}
+                  animate={{ opacity: 1, y: 0, height: 'auto' }}
+                  exit={{ opacity: 0, y: -4, height: 0 }}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 bg-negative-light border border-negative/20"
                 >
-                  Access password
-                </label>
-                <input
-                  ref={inputRef}
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder:text-ink-700
-                    focus:outline-none focus:ring-2 focus:ring-coral/50 transition-all duration-200"
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.09)',
-                  }}
-                  required
-                />
-              </div>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" className="shrink-0">
+                    <circle cx="8" cy="8" r="7" stroke="#DC2626" strokeWidth="1.5"/>
+                    <path d="M8 5v3.5M8 10.5v.5" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <p className="text-xs text-negative">{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6, height: 0 }}
-                    animate={{ opacity: 1, y: 0, height: 'auto' }}
-                    exit={{ opacity: 0, y: -6, height: 0 }}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2.5"
-                    style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.2)' }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                      <circle cx="8" cy="8" r="7" stroke="#DC2626" strokeWidth="1.5"/>
-                      <path d="M8 5v3.5M8 10.5v.5" stroke="#DC2626" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                    <p className="text-xs text-negative">{error}</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+            <motion.button
+              type="submit"
+              disabled={loading || !password}
+              whileHover={{ scale: loading ? 1 : 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-full bg-coral text-white font-semibold text-sm py-3 px-4 rounded-xl
+                hover:bg-coral-600 active:bg-coral-700 transition-colors duration-150
+                disabled:opacity-40 disabled:cursor-not-allowed
+                flex items-center justify-center gap-2 shadow-sm"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
+                  </svg>
+                  Verifying…
+                </>
+              ) : (
+                <>
+                  Continue
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </>
+              )}
+            </motion.button>
+          </form>
 
-              <motion.button
-                type="submit"
-                disabled={loading || !password}
-                whileHover={{ scale: loading ? 1 : 1.015 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full bg-coral text-white font-semibold text-sm py-3 px-4 rounded-xl
-                  hover:bg-[#D04433] transition-all duration-200 shadow-glow-coral
-                  disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
-                  flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
-                    </svg>
-                    Verifying…
-                  </>
-                ) : (
-                  <>
-                    Enter dashboard
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </>
-                )}
-              </motion.button>
-            </form>
-          </div>
-        </div>
+          <p className="text-[11px] text-ink-400 mt-8 leading-relaxed">
+            Restricted to Yonder employees.{' '}
+            <span className="text-ink-300">Unauthorised access attempts are logged.</span>
+          </p>
+        </motion.div>
+      </div>
 
-        <p className="text-center text-[11px] text-ink-700 mt-6 px-4">
-          Restricted to Yonder employees. Unauthorised access attempts are logged.
-        </p>
-      </motion.div>
     </main>
   )
 }
