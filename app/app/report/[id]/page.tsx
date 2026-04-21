@@ -28,5 +28,5 @@ export default async function AutomatedReportPage({ params }: Props) {
 
   const partnerConfig = getPartnerConfig(config.partner_name)
 
-  return <ReportPage summary={summary} commercials={partnerConfig?.commercials ?? []} />
+  return <ReportPage summary={summary} commercials={partnerConfig?.commercials ?? []} token={id} />
 }

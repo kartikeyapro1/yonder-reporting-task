@@ -25,15 +25,20 @@ interface Params {
 }
 
 export async function GET(req: Request, { params }: Params) {
-  const auth = await requireStaffAuth()
-  if (auth instanceof NextResponse) return auth
-
   const { id } = await params
   const url = new URL(req.url)
   const format = (url.searchParams.get('format') ?? 'html') as 'html' | 'pdf' | 'email'
 
-  // Support both slug and token lookups
+  // Support both slug (internal staff) and opaque token (partner-facing) lookups.
+  // Token-based access is intentionally unauthenticated — same security model as /report/[token].
   const config = getPartnerBySlug(id) ?? getPartnerByToken(id)
+
+  // If resolved by slug (not token), require staff auth
+  const resolvedByToken = !getPartnerBySlug(id) && !!getPartnerByToken(id)
+  if (!resolvedByToken) {
+    const auth = await requireStaffAuth()
+    if (auth instanceof NextResponse) return auth
+  }
   if (!config) {
     return NextResponse.json({ error: 'Partner not found' }, { status: 404 })
   }

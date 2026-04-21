@@ -11,6 +11,8 @@ import type { PartnerSummaryMetrics, CommercialModel } from '@/lib/types'
 interface Props {
   summary: PartnerSummaryMetrics
   commercials: CommercialModel[]
+  /** Opaque partner token — used for the HTML download link (no staff auth required) */
+  token: string
 }
 
 function fmt(n: number) {
@@ -60,7 +62,7 @@ function DataRow({ label, value, highlight, large }: { label: string; value: str
 
 import Link from 'next/link'
 
-export function ReportPage({ summary, commercials }: Props) {
+export function ReportPage({ summary, commercials, token }: Props) {
   const now = new Date()
   const generatedAt = now.toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric'
@@ -83,8 +85,7 @@ export function ReportPage({ summary, commercials }: Props) {
   const activeMonthCount = summary.on_months_count
   const inactiveMonthCount = summary.off_months_count
 
-  // Partner-facing download link (uses slug, but token is available in URL param)
-  const slug = summary.partner_name.toLowerCase().replace(/\s+/g, '-')
+  // Partner-facing download link — use opaque token so no staff auth is required
 
   return (
     <div className="min-h-screen bg-sand-50 print:bg-white">
@@ -94,7 +95,7 @@ export function ReportPage({ summary, commercials }: Props) {
         <div className="max-w-3xl mx-auto px-8 py-12">
           <div className="flex justify-end mb-4">
             <a
-              href={`/api/partners/${slug}/export?format=html`}
+              href={`/api/partners/${token}/export?format=html`}
               download
               className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-white/20 bg-white/10 hover:bg-coral hover:text-white hover:border-coral transition-all duration-200"
             >
