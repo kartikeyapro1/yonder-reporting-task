@@ -225,7 +225,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
             <KpiCard label="Visits" value={(isFiltered ? rangeTx : summary.total_transactions).toLocaleString()} sub={isFiltered ? 'selected range' : undefined} />
           </div>
           <div className="flex-1 px-6 py-5 last:pr-0">
-            <KpiCard label="Members" value={(isFiltered ? rangeUsers : summary.unique_users).toLocaleString()} sub={isFiltered ? 'selected range' : undefined} />
+            <KpiCard label="Members" value={summary.unique_users.toLocaleString()} sub={isFiltered ? 'full period' : undefined} />
           </div>
         </div>
       </FadeIn>

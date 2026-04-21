@@ -293,10 +293,10 @@ export function ReportPage({ summary, commercials }: Props) {
             </div>
 
             <div className="rounded-2xl border border-gray-200/60 bg-white p-5 shadow-card">
-              <DataRow label="New customer visits (first-time)" value={fmt(summary.new_revenue)} highlight />
-              <DataRow label="Returning customer visits" value={fmt(summary.repeat_revenue)} highlight />
+              <DataRow label="First-time member commission" value={fmt(summary.new_revenue)} highlight />
+              <DataRow label="Returning member commission" value={fmt(summary.repeat_revenue)} highlight />
               {summary.boost_revenue > 0 && (
-                <DataRow label="Commission from time-boost periods" value={fmt(summary.boost_revenue)} highlight />
+                <DataRow label="Time-boost period commission" value={fmt(summary.boost_revenue)} highlight />
               )}
               {summary.enhanced_rate_transactions > 0 && (
                 <DataRow
@@ -310,7 +310,7 @@ export function ReportPage({ summary, commercials }: Props) {
                   value="—"
                 />
               )}
-              <DataRow label="Total partnership investment" value={fmt(summary.total_revenue)} highlight large />
+              <DataRow label="Total Yonder commission" value={fmt(summary.total_revenue)} highlight large />
               <DataRow label="Effective rate" value={`${revenueMargin.toFixed(2)}% of total card spend`} />
               {(summary.total_points_earned ?? 0) > 0 && (
                 <DataRow
@@ -401,7 +401,7 @@ export function ReportPage({ summary, commercials }: Props) {
             <YonderLogo variant="dark" size="sm" showWordmark={false} />
             <span>© Yonder · Confidential · {generatedAt}</span>
           </div>
-          <span className="text-ink-200">Auto-generated report</span>
+          <span className="text-ink-200">Prepared by Yonder</span>
         </div>
       </div>
     </div>

@@ -136,7 +136,9 @@ export function PartnerFacingClient({ summary }: Props) {
   const sec4 = useInView(sec4Ref, { margin: '-40% 0px -40% 0px' })
   const sec5 = useInView(sec5Ref, { margin: '-40% 0px -40% 0px' })
 
-  const sections = [sec0, sec1, sec2, sec3, sec4, sec5]
+  const sections = hasOnOff
+    ? [sec0, sec1, sec2, sec3, sec4, sec5]
+    : [sec0, sec1, sec3, sec4, sec5]
 
   return (
     <main className="bg-white" style={{ overflowX: 'clip' }}>
@@ -195,7 +197,7 @@ export function PartnerFacingClient({ summary }: Props) {
             transition={{ duration: 0.8, delay: 0.8, ease }}
             className="text-lg md:text-xl text-ink-400 leading-relaxed mx-auto max-w-xl"
           >
-            Here&apos;s how your customers engaged with {summary.display_name} through the Yonder rewards programme.
+            Here&apos;s how the Yonder partnership performed for {summary.display_name} this period.
           </motion.p>
         </motion.div>
 
