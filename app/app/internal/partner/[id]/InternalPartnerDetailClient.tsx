@@ -11,7 +11,7 @@ import { InsightCard } from '@/components/ui/InsightCard'
 import { SpendTrendChart } from '@/components/charts/SpendTrendChart'
 import { OnOffComparisonChart } from '@/components/charts/OnOffComparisonChart'
 import { NewVsExistingChart } from '@/components/charts/NewVsExistingChart'
-import { PARTNER_CONFIGS } from '@/lib/config/partner-commercials'
+import { PARTNER_CONFIGS, getCommercialModel } from '@/lib/config/partner-commercials'
 import { FadeIn, StaggerList, StaggerItem, ScaleIn } from '@/components/motion'
 import CountUp from '@/components/ui/CountUp'
 import type { PartnerSummaryMetrics } from '@/lib/types'
@@ -87,6 +87,22 @@ export function InternalPartnerDetailClient({ summary }: Props) {
   }
 
   const token = PARTNER_CONFIGS.find(c => c.partner_name === summary.partner_name)?.partner_token ?? ''
+  const commercial = getCommercialModel(summary.partner_name, new Date())
+  const commercialLabel = commercial
+    ? commercial.type === 'cpa_new_repeat'
+      ? `CPA · £${commercial.cpa_new} new / £${commercial.cpa_repeat} repeat`
+      : `% Spend · ${((commercial.pct_new ?? 0) * 100).toFixed(0)}% new / ${((commercial.pct_repeat ?? 0) * 100).toFixed(0)}% repeat`
+    : null
+  const newRateLabel = commercial
+    ? commercial.type === 'cpa_new_repeat'
+      ? `£${commercial.cpa_new} / visit`
+      : `${((commercial.pct_new ?? 0) * 100).toFixed(0)}% of spend`
+    : null
+  const repeatRateLabel = commercial
+    ? commercial.type === 'cpa_new_repeat'
+      ? `£${commercial.cpa_repeat} / visit`
+      : `${((commercial.pct_repeat ?? 0) * 100).toFixed(0)}% of spend`
+    : null
   const hasOnOff = summary.on_months_count > 0 && summary.off_months_count > 0
   const incrementalPositive = summary.incremental_spend > 0
   const newPct = pct(summary.new_transactions, summary.total_transactions)
@@ -117,7 +133,14 @@ export function InternalPartnerDetailClient({ summary }: Props) {
               <span className="text-ink-500">{summary.display_name}</span>
             </div>
             <h1 className="text-3xl font-display font-semibold text-ink-900 tracking-display">{summary.display_name}</h1>
-            <p className="text-sm text-ink-400 mt-1">{summary.period_label}</p>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <p className="text-sm text-ink-400">{summary.period_label}</p>
+              {commercialLabel && (
+                <span className="text-[11px] font-medium text-coral bg-coral-50 border border-coral-100 px-2 py-0.5 rounded-full">
+                  {commercialLabel}
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex gap-2.5">
             <a
@@ -216,7 +239,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
       <FadeIn delay={0.1}>
         <div className="flex divide-x divide-gray-100 border-y border-gray-100 mb-6">
           <div className="flex-1 px-6 py-5 first:pl-0">
-            <KpiCard label="Member spend" value={fmt(isFiltered ? rangeSpend : summary.total_spend_gbp)} sub={isFiltered ? 'selected range' : undefined} />
+            <KpiCard label="Card spend" value={fmt(isFiltered ? rangeSpend : summary.total_spend_gbp)} sub={isFiltered ? 'selected range' : undefined} />
           </div>
           <div className="flex-1 px-6 py-5">
             <KpiCard label="Commission" value={fmt(isFiltered ? rangeRevenue : summary.total_revenue)} sub={isFiltered ? 'selected range' : undefined} />
@@ -225,7 +248,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
             <KpiCard label="Visits" value={(isFiltered ? rangeTx : summary.total_transactions).toLocaleString()} sub={isFiltered ? 'selected range' : undefined} />
           </div>
           <div className="flex-1 px-6 py-5 last:pr-0">
-            <KpiCard label="Members" value={summary.unique_users.toLocaleString()} sub={isFiltered ? 'full period' : undefined} />
+            <KpiCard label="Cardholders" value={summary.unique_users.toLocaleString()} sub={isFiltered ? 'full period' : undefined} />
           </div>
         </div>
       </FadeIn>
@@ -358,12 +381,14 @@ export function InternalPartnerDetailClient({ summary }: Props) {
                     <p className="font-semibold text-ink-800 text-lg font-tabular">{summary.new_transactions}</p>
                     <p className="text-xs text-ink-400 mt-0.5">{fmt(summary.new_spend_gbp)} spend</p>
                     <p className="text-xs text-positive font-medium mt-0.5">{fmt(summary.new_revenue)} rev</p>
+                    {newRateLabel && <p className="text-[10px] text-ink-300 mt-1 font-medium">{newRateLabel}</p>}
                   </div>
                   <div className="bg-sand-50 rounded-xl p-3.5 border border-sand-200">
                     <p className="text-[11px] text-ink-400 mb-0.5">Repeat</p>
                     <p className="font-semibold text-ink-800 text-lg font-tabular">{summary.repeat_transactions}</p>
                     <p className="text-xs text-ink-400 mt-0.5">{fmt(summary.repeat_spend_gbp)} spend</p>
                     <p className="text-xs text-positive font-medium mt-0.5">{fmt(summary.repeat_revenue)} rev</p>
+                    {repeatRateLabel && <p className="text-[10px] text-ink-300 mt-1 font-medium">{repeatRateLabel}</p>}
                   </div>
                 </div>
               </div>
@@ -390,7 +415,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
       {summary.insights.length > 0 && (
         <FadeIn delay={0.4}>
           <div className="mb-8">
-            <h3 className="text-[11px] font-semibold text-ink-400 uppercase tracking-caps mb-3">Key findings</h3>
+            <h3 className="text-[11px] font-semibold text-ink-400 uppercase tracking-caps mb-3">Analyst notes</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {summary.insights.map((insight, i) => (
                 <InsightCard key={i} text={insight} />

@@ -21,6 +21,7 @@
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { getPartnerByToken } from '@/lib/config/partner-commercials'
+import { COOKIE_STAFF, COOKIE_PARTNER } from '@/lib/auth/constants'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -32,18 +33,18 @@ export interface AuthSession {
 
 // ─── Staff auth ──────────────────────────────────────────────────────────────
 
-const STAFF_COOKIE = 'yonder_staff_session'
+const STAFF_COOKIE = COOKIE_STAFF
 
 /**
  * Check if the current request has a valid staff session.
  * In production, this would validate a JWT or session cookie against the IdP.
  *
- * For development: any value in the cookie is treated as a valid staff session.
- * Set REQUIRE_AUTH=false in .env.local to bypass auth entirely (default for dev).
+ * Auth is always required unless explicitly opted out:
+ *   ALLOW_DEV_BYPASS=true   (dev only — never set in production)
  */
 export async function getStaffSession(): Promise<AuthSession | null> {
-  // In development, auth is optional unless REQUIRE_AUTH=true
-  if (process.env.REQUIRE_AUTH !== 'true') {
+  // Dev bypass — must be explicitly enabled; never active in production
+  if (process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_BYPASS === 'true') {
     return { type: 'staff', identity: 'dev@yonder.com' }
   }
 
@@ -73,7 +74,7 @@ export async function requireStaffAuth(): Promise<AuthSession | NextResponse> {
 
 // ─── Partner auth ────────────────────────────────────────────────────────────
 
-const PARTNER_COOKIE = 'yonder_partner_session'
+const PARTNER_COOKIE = COOKIE_PARTNER
 
 /**
  * Validate a partner token and return the session.

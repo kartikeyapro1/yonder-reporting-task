@@ -23,9 +23,13 @@ function secret(): string {
         'Generate with: openssl rand -base64 32'
       )
     }
-    // Dev-only fallback — magic links will verify correctly within a single
-    // dev session but tokens are not portable across restarts.
-    return 'yonder-dev-secret-CHANGE-ME-in-production'
+    // Dev-only fallback. Tokens generated with this value are not portable
+    // across restarts and must never be deployed to production.
+    console.warn(
+      '[auth/tokens] PARTNER_LINK_SECRET not set — using ephemeral dev secret. ' +
+      'Magic links will not persist across server restarts.'
+    )
+    return `dev-secret-${process.pid}`
   }
   return s
 }

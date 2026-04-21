@@ -10,7 +10,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'yonder2025'
+const INTERNAL_SECRET = process.env.INTERNAL_SECRET
+if (!INTERNAL_SECRET) {
+  throw new Error(
+    'INTERNAL_SECRET env var is required. ' +
+    'Set it in .env.local (dev) or Vercel environment variables (prod).'
+  )
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null)
@@ -23,7 +29,7 @@ export async function POST(req: NextRequest) {
   const isSecure = req.nextUrl.protocol === 'https:'
   const response = NextResponse.json({ ok: true })
 
-  response.cookies.set('yonder_internal', INTERNAL_SECRET, {
+  response.cookies.set('yonder_internal', INTERNAL_SECRET!, {
     httpOnly: true,
     sameSite: 'strict',
     secure: isSecure,

@@ -17,13 +17,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { COOKIE_INTERNAL, COOKIE_PARTNER, getInternalSecret } from '@/lib/auth/constants'
 
-// Intentionally no fallback — an unset secret means no cookie will ever match,
-// so auth fails closed rather than open with a known default value.
-// Set INTERNAL_SECRET in .env.local (dev) or Vercel env vars (prod).
-const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? ''
-const COOKIE_INTERNAL = 'yonder_internal'
-const COOKIE_PARTNER  = 'yonder_partner'
+const INTERNAL_SECRET = getInternalSecret()
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl

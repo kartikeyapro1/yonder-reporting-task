@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { COOKIE_STAFF } from '@/lib/auth/constants'
 
 export async function POST(req: Request) {
   const body = await req.json()
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   const cookieStore = await cookies()
-  cookieStore.set('yonder_staff_session', email, {
+  cookieStore.set(COOKIE_STAFF, email, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

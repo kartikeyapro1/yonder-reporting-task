@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicToken } from '@/lib/auth/tokens'
 import { PARTNER_CONFIGS } from '@/lib/config/partner-commercials'
+import { COOKIE_PARTNER } from '@/lib/auth/constants'
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
   const destination = new URL(`/partner/${config.partner_token}`, req.url)
 
   const response = NextResponse.redirect(destination)
-  response.cookies.set('yonder_partner', config.partner_token, {
+  response.cookies.set(COOKIE_PARTNER, config.partner_token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: isSecure,

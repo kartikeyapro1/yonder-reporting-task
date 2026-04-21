@@ -11,12 +11,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateMagicToken } from '@/lib/auth/tokens'
 import { PARTNER_CONFIGS } from '@/lib/config/partner-commercials'
+import { COOKIE_INTERNAL, getInternalSecret } from '@/lib/auth/constants'
 
-const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'yonder2025'
+const INTERNAL_SECRET = getInternalSecret()
 
 export async function POST(req: NextRequest) {
   // Only internal staff can generate links
-  const internalKey = req.cookies.get('yonder_internal')?.value
+  const internalKey = req.cookies.get(COOKIE_INTERNAL)?.value
   if (internalKey !== INTERNAL_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

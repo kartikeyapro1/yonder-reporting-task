@@ -67,27 +67,34 @@ export const PARTNER_CONFIGS: PartnerConfig[] = [
   },
 ]
 
+// ─── Lookup caches ───────────────────────────────────────────────────────────
+// Built once at module load. O(1) for all hot-path lookups.
+
+const _byName  = new Map<string, PartnerConfig>(PARTNER_CONFIGS.map(c => [c.partner_name, c]))
+const _byToken = new Map<string, PartnerConfig>(PARTNER_CONFIGS.map(c => [c.partner_token, c]))
+const _bySlug  = new Map<string, PartnerConfig>(
+  PARTNER_CONFIGS.map(c => [c.partner_name.toLowerCase().replace(/\s+/g, '-'), c])
+)
+
 /**
  * Retrieve config for a partner by canonical name.
  */
 export function getPartnerConfig(partnerName: string): PartnerConfig | undefined {
-  return PARTNER_CONFIGS.find(c => c.partner_name === partnerName)
+  return _byName.get(partnerName)
 }
 
 /**
  * Retrieve config by the opaque partner token (for partner-facing routes).
  */
 export function getPartnerByToken(token: string): PartnerConfig | undefined {
-  return PARTNER_CONFIGS.find(c => c.partner_token === token)
+  return _byToken.get(token)
 }
 
 /**
  * Retrieve config by URL slug (for internal routes).
  */
 export function getPartnerBySlug(slug: string): PartnerConfig | undefined {
-  return PARTNER_CONFIGS.find(
-    c => c.partner_name.toLowerCase().replace(/\s+/g, '-') === slug
-  )
+  return _bySlug.get(slug)
 }
 
 /**

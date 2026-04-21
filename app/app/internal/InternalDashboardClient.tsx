@@ -159,7 +159,7 @@ export function InternalDashboardClient({ rows, totals }: Props) {
       prefix: '',
     },
     {
-      label: 'Members',
+      label: 'Cardholders',
       title: 'Distinct Yonder cardholders who made at least one settled transaction.',
       value: totals.totalUsers,
       prefix: '',
@@ -344,7 +344,7 @@ export function InternalDashboardClient({ rows, totals }: Props) {
                     Visits<SortIcon active={sortKey === 'total_transactions'} dir={sortDir} />
                   </th>
                   <th onClick={() => toggleSort('unique_users')} role="columnheader" aria-sort={sortKey === 'unique_users' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('unique_users')} className="group/th text-right px-4 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors" title="Unique Yonder cardholders who visited">
-                    Members<SortIcon active={sortKey === 'unique_users'} dir={sortDir} />
+                    Cardholders<SortIcon active={sortKey === 'unique_users'} dir={sortDir} />
                   </th>
                   <th onClick={() => toggleSort('last_active_month')} role="columnheader" aria-sort={sortKey === 'last_active_month' ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} tabIndex={0} onKeyDown={e => e.key === 'Enter' && toggleSort('last_active_month')} className="group/th text-right px-4 py-3.5 text-xs font-medium text-ink-400 cursor-pointer select-none hover:text-ink-700 transition-colors">
                     Last active<SortIcon active={sortKey === 'last_active_month'} dir={sortDir} />
