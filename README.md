@@ -56,7 +56,7 @@ Session cookie lasts **8 hours**. After login you are redirected to `/internal`.
 
 ### Partner-Facing Pages
 
-Partners access their dashboards via magic-link tokens — no password required.
+Partners access their dashboards via magic-link tokens — no password required. Links are valid for **48 hours**; to change this, update `EXPIRY_HOURS` in `app/lib/auth/tokens.ts`.
 
 | Partner  | Token          | URL                              |
 |----------|----------------|----------------------------------|
