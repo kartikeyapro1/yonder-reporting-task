@@ -144,7 +144,7 @@ export function InternalPartnerDetailClient({ summary }: Props) {
           </div>
           <div className="flex gap-2.5">
             <a
-              href={`/api/partners/${slug}/export?format=html`}
+              href={`/api/partners/${token}/export?format=html`}
               download
               className="text-sm font-medium px-4 py-2.5 rounded-xl border border-gray-200/80 bg-white hover:bg-sand-50
                 hover:border-coral/20 transition-all duration-300 text-ink-600 flex items-center gap-1.5"
